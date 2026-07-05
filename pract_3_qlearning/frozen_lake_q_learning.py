@@ -1,4 +1,4 @@
-from qlearning.qlearning import QLearning
+from pract_3_qlearning.qlearning.qlearning import QLearning
 import gymnasium as gym
 import numpy as np
 import matplotlib.pyplot as plt
@@ -32,7 +32,7 @@ def solve_qlearning():
     print('LET US LEARN NOW!')
     qlearning.train(total_episodes_train=3000)
     qlearning.results_train.plot_data()
-    #plot_q_table(qlearning.q_table)
+    #plot_q_table(pract_3_qlearning.q_table)
     print('LET US USE OUR FULL KNOWLEDGE NOW!')
     qlearning.test(total_episodes_test=10)
     qlearning.results_test.plot_data()

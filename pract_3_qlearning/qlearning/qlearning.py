@@ -1,16 +1,23 @@
+"""
+    Se proporciona la clase QLearning con los siguientes métodos principales:
+    - test: funcionamiento del agente.
+    - train: A COMPLETAR POR EL ESTUDIANTE. Entrenamiento y cálculo de la tabla Q.
+    - guardar/cargar la tabla Q
+"""
 import numpy as np
 import random
 import time
 import matplotlib.pyplot as plt
 
 class QLearning():
-    def __init__(self, train_env, test_env):
-        self.train_env = train_env
-        self.test_env = test_env
+    def __init__(self, environment):
+        self.env = environment
         # Initialize Q-table with zeros (500 states x 6 actions)
-        self.state_size = self.train_env.observation_space.n
-        self.action_size = self.train_env.action_space.n
-        # importante, la tabla Q
+        self.state_size = self.env.observation_space.n
+        self.action_size = self.env.action_space.n
+        # important: la taula Q s'inicialitza amb zeros
+        # es pot carregar des d'un fitxer amb el mètode load_q_table
+        # es pot guardar a un fitxer amb el mètode save_q_table
         self.q_table = np.zeros((self.state_size, self.action_size))
 
         # Hyperparameters
@@ -21,71 +28,70 @@ class QLearning():
         self.min_epsilon = 0.01
         self.decay_rate = 0.01  # Exponential decay rate for exploration
         # para guardar resultados
-        self.results_train = Results()
-        self.results_test = Results()
+        self.results = Results()
 
     def train(self, total_episodes_train):
         print("Training started!\n\n")
-        # Training loop
         for episode in range(total_episodes_train):
             print("Episode: ", episode)
-            state, info = self.train_env.reset()
+            state, info = self.env.reset()
             while True:
-                # Step 1: Epsilon-greedy action selection
-                if random.uniform(0, 1) < self.epsilon:
-                    action = self.train_env.action_space.sample()  # Explore
-                else:
-                    action = np.argmax(self.q_table[state])  # Exploit
-                # Step 2: Take action, observe new state and reward
-                next_state, reward, terminated, truncated, info = self.train_env.step(action)
-                # print('Action, Reward:', action, reward)
-                # time.sleep(5)
-                self.results_train.save_data(episode, next_state, reward)
+                # toma una acción aleatoria
+                action = self.env.action_space.sample()
+                # aplica la acción al entorno
+                next_state, reward, terminated, truncated, info = self.env.step(action)
                 if terminated or truncated:
-                    self.results_train.q_table = self.q_table
+                    self.results.q_table = self.q_table
                     break
-                # Step 3: Actualiza la tabla
-                # usa una de estas funciones.
-                self.update_q_table_bellman(state, action, next_state, reward)
-
+                self.update_q_table(state, action, next_state, reward)
                 # Move to next state
                 state = next_state
-            # Reduce epsilon (less exploration, more exploitation as time goes on)
-            self.epsilon = self.min_epsilon + (self.max_epsilon - self.min_epsilon) * np.exp(-self.decay_rate * episode)
 
         print("Training finished! Your Q-table is optimized.")
-        self.train_env.close()
+        self.env.close()
         return self.q_table
+
+
+    def update_q_table(self, state, action, next_state, reward):
+        print('State: ', state)
+        print('Action: ', action)
+        print('Reward: ', reward)
+        self.q_table[state, action] = reward
+        # self.q_table[state, action] = (self.q_table[state, action] +
+        #                                self.learning_rate * (
+        #                                            reward + self.discount_rate * np.max(self.q_table[next_state]) -
+        #                                            self.q_table[state, action]))
 
     def test(self, total_episodes_test):
         print('Test started')
         # test loop
         for episode in range(total_episodes_test):
             print("Episode: ", episode)
-            state, info = self.test_env.reset()
+            state, info = self.env.reset()
             while True:
                 # Step 1: Greedy action selection
                 action = np.argmax(self.q_table[state])  # Exploit
                 # Step 2: Take action, observe new state and reward
-                next_state, reward, terminated, truncated, info = self.test_env.step(action)
-                self.results_test.save_data(episode, next_state, reward)
+                next_state, reward, terminated, truncated, info = self.env.step(action)
+                self.results.save_data(episode, next_state, reward)
                 time.sleep(1)
                 if terminated or truncated:
                     break
-                # Move to next state
+                # Move to the next state
                 state = next_state
         print("Test finished!")
-        print("My results areeeee!")
-        self.test_env.close()
+        self.env.close()
 
-    def update_q_table_bellman(self, state, action, next_state, reward):
-        # Step 3: Update Q-table using the Bellman Equation
-        self.q_table[state, action] = (self.q_table[state, action] +
-                                       self.learning_rate * (
-                                                   reward + self.discount_rate * np.max(self.q_table[next_state]) -
-                                                   self.q_table[state, action]))
+    def load_random_q_table(self):
+        self.q_table = np.random.rand(self.state_size, self.action_size)
 
+    def load_q_table(self, filename):
+        with open(filename, 'rb') as f:
+            self.q_table = np.load(f)
 
+    def save_q_table(self, filename):
+        with open(filename, 'wb') as f:
+            np.save(f, self.q_table)
 
 
 class Results():
