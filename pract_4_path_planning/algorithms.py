@@ -91,6 +91,7 @@ if __name__ == "__main__":
     grafo.create_map()
     print(grafo.graph)
     result = grafo.BFS_search1(['Madrid'], 'Elche')
+    result = grafo.BFS_search2(['Madrid'], 'Elche')
     print(result)
 
 
