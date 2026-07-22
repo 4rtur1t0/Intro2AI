@@ -1,14 +1,13 @@
-import numpy as np
 import math
 import matplotlib.pyplot as plt
 
-
 class Graph:
-    """Manages the collection of nodes and network algorithms."""
+    """Manages the collection of nodes in the network."""
 
     def __init__(self):
         # Master dictionary to look up Node objects by their string name
         # Format: {"Madrid": <Node Object>}
+        # Guarda les relacions de connexió i distància entre nodes de la xarxa
         self.graph = {}
         self.gps_positions = None
         self.gps_position_data()
@@ -38,12 +37,20 @@ class Graph:
             return None
 
     def get_neighbors(self, name):
+        """
+        Returns the list of neighbors of a given node.
+        :param name:
+        :return:
+        """
         neighbors = self.graph.get(name)
         neighbors = list(neighbors.keys())
         return neighbors
 
     def build_network(self):
-        # 3. Build your city network
+        """
+        Given here as a particular problem of roads connecting cities in Spain.
+        """
+        # Build your city network
         self.add_edge("Madrid", "Guadalajara")
         self.add_edge("Madrid", "Cuenca")
         self.add_edge("Madrid", "Segovia")
@@ -66,6 +73,11 @@ class Graph:
         self.add_edge("Murcia", "Albacete")
 
     def gps_position_data(self):
+        """
+        Also storing the GPS position of each city. Useful to compute the flying distance from any node to the destination
+        node.
+        :return:
+        """
         self.gps_positions = {
             "Madrid": {"lat": 40.4167, "lon": -3.7037},
             "Guadalajara": {"lat": 40.6337, "lon": -3.1674},
@@ -89,6 +101,12 @@ class Graph:
             "Tarancón": {"lat": 40.008279, "lon": -2.9958}}
 
     def road_distance_data(self, origen, destino):
+        """
+        Es proporciona una matriu amb les distàncies per carretera entre nodes de la xarxa.
+        :param origen:
+        :param destino:
+        :return:
+        """
         # Ciudades en orden:
         # 0: Madrid, 1: Guadalajara, 2: Cuenca, 3: Teruel, 4: Segovia, 5: Toledo, 6: Soria,
         # 7: Ciudad Real, 8: Puertollano, 9: Calatayud, 10: Zaragoza, 11: Albacete,
@@ -133,8 +151,13 @@ class Graph:
              0]]  # Tarancón
         return distancias_carretera[idx_orig][idx_dest]
 
-
     def compute_flying_distance(self, ciudad1, ciudad2):
+        """
+        Calcula la distancia en km entre dos nodos de la red.
+        :param ciudad1:
+        :param ciudad2:
+        :return:
+        """
         lat1 = self.gps_positions[ciudad1]["lat"]
         lon1 = self.gps_positions[ciudad1]["lon"]
         lat2 = self.gps_positions[ciudad2]["lat"]
@@ -156,11 +179,13 @@ class Graph:
         distancia = R * c
         return distancia
 
-
-    def plot_network(self, ruta_resaltada=None):
+    def plot_network(self):
+        """
+        Plotea la red.
+        :return:
+        """
         plt.figure(figsize=(11, 9))
-
-        # 1. Dibujar TODAS las carreteras del grafo en gris
+        # Dibujar TODAS las carreteras del grafo en gris
         carreteras_dibujadas = set()
         for node in self.graph.keys():
             for neighbor in self.get_neighbors(node):
@@ -182,7 +207,7 @@ class Graph:
                     plt.annotate(str(road_distance), (mid_gps[0], mid_gps[1]),
                                  textcoords="offset points",
                                  xytext=(8, 3), fontsize=9, weight='bold')
-        # 3. Dibujar los puntos de las ciudades y sus etiquetas
+        # Dibuja los puntos de las ciudades y sus etiquetas
         for node in self.graph.keys():
             # Si la ciudad forma parte de la ruta elegida, se pinta de azul; si no, de rojo
             # color_nodo = 'dodgerblue' if (ruta_resaltada and node.name in ruta_resaltada) else 'red'
@@ -194,171 +219,9 @@ class Graph:
                          xytext=(8, 3), fontsize=9, weight='bold')
 
         # Configuración del mapa estático
-        plt.title("Red de Carreteras y Ruta Óptima", fontsize=14, pad=15)
+        plt.title("Red de carreteras", fontsize=14, pad=15)
         plt.xlabel("Longitud (X, grados)")
         plt.ylabel("Latitud (Y, grados)")
         plt.grid(True, linestyle='--', alpha=0.3)
         plt.gca().set_aspect('equal', adjustable='box')
-        if ruta_resaltada:
-            plt.legend(loc="upper left")
         plt.show()
-
-
-class BFS_search():
-    def __init__(self, graph):
-        self.graph = graph
-        self.queue = []
-        self.visited_nodes = []
-        self.parent_map = {}
-
-    def process_neighbors(self, current_node):
-        """
-        Obtain the neighbours (successors) of the current node.
-            For each node:
-                if the neighbor is not in the list of visited nodes:
-                    append it to the list of visited nodes.
-                    append it to the node processing queue (FIFO queue)
-        :param current_node:
-        :return:
-        """
-        # Get the list of neighbors of the current node
-        neighbors = self.graph.get_neighbors(current_node)
-        print('Found neighbors:', neighbors)
-        # para cada vecino neighbour encontrado
-        for neighbor in neighbors:
-            if neighbor not in self.visited_nodes:
-                # si no se ha visitado: a) se añade a la lista de visitados y b) se añade a la cola de exploración
-                # print('Adding new node to the queue:', neighbor)
-                self.visited_nodes.append(neighbor)
-                # TODO: QUITAR parent_map --> debe guardar la ruta el alumno
-                self.parent_map[neighbor] = current_node
-                self.queue.append(neighbor)
-
-    def reorder_queue(self, destination):
-        """
-        TODO: quitar función, debe añadirla el estudiante.
-        Al añadir esta función, ya no es BFS, sino que en la cola se incluye el nodo con mayor interés
-        (menor distancia). Al reordenarse, se procesará en la siguiente iteración este nodo.
-        :param destination:
-        :return:
-        """
-        distances = []
-        for node in self.queue:
-            d = self.graph.compute_flying_distance(destination, node)
-            distances.append(d)
-        sort_index = np.argsort(distances)
-        # reorder queue according to current flying distances
-        self.queue = [self.queue[i] for i in sort_index]
-
-    def get_route(self, current_node):
-        route = []
-        total_distance = 0
-        while current_node is not None:
-            route.append(current_node)
-            current_node = self.parent_map[current_node]
-        # Reverse to get start -> destination
-        route = route[::-1]
-        # TODO: NOW COMPUTE the total distance of the solution
-        # TODO: CALCULE LA DISTANCIA TOTAL
-        for i in range(len(route) - 1):
-            nodeA = route[i]
-            nodeB = route[i + 1]
-            d = self.graph.get_distance(nodeA, nodeB)
-            total_distance += d
-        return route, total_distance
-
-    def find_route_BFS(self, start_name, destination_name):
-        """Finds a route using iterative Breadth-First Search."""
-        # Safety check: ensure both cities actually exist in our graph
-        if not self.graph.get_node(start_name) or not self.graph.get_node(destination_name):
-            return None
-        # Standard BFS setup
-        self.queue = [start_name]
-        self.visited_nodes = [start_name]
-        self.parent_map[start_name] = None
-
-        iterations = 0
-        while len(self.queue) > 0:
-            print(30 * '=')
-            print('Current queue is: ', self.queue)
-            # pop current_node from the queue
-            current_node = self.queue.pop(0)
-            print('Current node is: ', current_node)
-            if current_node == destination_name:
-                print('Found destination! in iterations: ', iterations)
-                return self.get_route(current_node)
-            self.process_neighbors(current_node)
-            iterations += 1
-        return None  # No route exists
-
-    def find_route_Heuristic(self, start_name, destination_name):
-        """Finds a route using iterative Breadth-First Search."""
-        # Safety check: ensure both cities actually exist in our graph
-        if not self.graph.get_node(start_name) or not self.graph.get_node(destination_name):
-            return None
-        # Standard BFS setup
-        self.queue = [start_name]
-        self.visited_nodes = [start_name]
-        self.parent_map[start_name] = None
-
-        iterations = 0
-        while len(self.queue) > 0:
-            print(30 * '=')
-            print('Current queue is: ', self.queue)
-            # pop current_node from the queue
-            current_node = self.queue.pop(0)
-            print('Current node is: ', current_node)
-            if current_node == destination_name:
-                print('Found destination! in iterations: ', iterations)
-                # Found solution: destination reached --> reconstruct the route
-                return self.get_route(current_node)
-            self.process_neighbors(current_node)
-            # TODO: CUIDADO! DEBEMOS REORDENAR LA LISTA DE ACUERDO CON NUESTRA HEURÍSTICA
-            self.reorder_queue(destination_name)
-            iterations += 1
-        return None  # No route exists
-
-
-if __name__ == "__main__":
-    # --- 1. Initialize the Graph ---
-    spain_network = Graph()
-    spain_network.build_network()
-    print(spain_network.graph)
-    spain_network.plot_network()
-
-    # Para que todo quede más limpio, tenemos una clase para la búsqueda
-    algoritmo = BFS_search(spain_network)
-    # --- 3. Run the Search ---
-    origen = 'Madrid'
-    destino = 'Murcia'
-    route, distance = algoritmo.find_route_Heuristic(origen , destino)
-
-    # --- 4. Print Results ---
-    if route:
-        print(f"Route found: {' -> '.join(route)}")
-        print(f"TOTAL DISTANCE IS: ", distance)
-    else:
-        print(f"No route found between start and end.")
-
-    # BFS_search1
-    # se entiende el mapa
-    # se entiende cómo se van añadiendo nodos al mapa
-    # PROBLEMA: se añaden bucles infinitos Madrid --> Segovia; Segovia--> Madrid
-    # Se consigue saber si una ciudad y otra del mapa están conectadas (lo que no es demasiado útil,
-    # ya que en principio están todos los nodos conectados de alguna manera
-    # se propone al estudiante que calcule:
-    #   a) el número de saltos entre Madrid y Elche
-    #   b) se propone al estudiante que cree una lista de nodos visitados de forma absoluta, de esta manera
-    #       se evita visitar nodos de forma infinita
-    #   c) se debe guardar el predecesor de cada nodo, de manera que podamos guardar la ruta
-
-    # BFS_search2
-    # sin bucles infinitos
-    # guarda la ruta
-    # la ruta no es óptima en términos de distancia
-
-    # Dijkstra
-
-    # A*
-
-    # Comparación
