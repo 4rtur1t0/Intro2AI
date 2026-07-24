@@ -66,7 +66,7 @@ def plot_route(G, ruta_nodos, distancia_total, zoom_level=15):
     except Exception as e:
         print(f"Atención: No se pudo cargar alguna tesela del mapa ({e}). Prueba bajando el nivel de zoom.")
     # 4. Ajustes finales de visualización
-    ax.set_title("Ruta sobre Mapa Satelital", color="white", backgroundcolor="black", fontsize=12)
+    ax.set_title("Ruta sobre el mapa satelital", fontsize=12)
     plt.tight_layout()
     plt.show()
 
@@ -77,15 +77,31 @@ if __name__ == "__main__":
     # print(f"Descargando la red vial para: {lugar}...")
     # G = ox.graph_from_place(lugar, network_type="drive")
     # OPCIÓN B: Usar un archivo local descargado de Overpass Turbo
+    ################################
     print('Cargando el mapa...')
     G = ox.graph_from_xml("maps/map0.osm")
     print('Mapa cargado.')
+    gps_origen = (38.2694, -0.706661)
+    gps_destino = (38.25, -0.694)
+    ################################
+    ################################
+    # print('Cargando el mapa...')
+    # G = ox.graph_from_xml("maps/map1.osm")
+    # print('Mapa cargado.')
+    # gps_origen = (38.2694, -0.706661)
+    # gps_destino = (38.35, -0.48)
+    ################################
+    ###############################
+    # print('Cargando el mapa...')
+    # G = ox.graph_from_xml("maps/map2.osm")
+    # print('Mapa cargado.')
+    # gps_origen = (38.2694, -0.706661)
+    # gps_destino = (39.35, -0.48)
+    ################################
+
 
     # EL MISMO ALGORITMO DE ANTES --> se debe modificar para manejar el nuevo mapa
     algoritmo = A_star_Algorithm_OSM(G)
-    # Introduce unas coordenadas GPS (Latitud, Longitud) de origen y destino
-    gps_origen = (38.2694, -0.706661)
-    gps_destino = (38.25, -0.694)
     # Buscamos los nodos reales de la red más cercanos a nuestros puntos GPS
     nodo_origen = algoritmo.get_closest_node(gps_origen)
     nodo_destino = algoritmo.get_closest_node(gps_destino)
@@ -93,4 +109,4 @@ if __name__ == "__main__":
     print(f"ID Nodo Destino más cercano: {nodo_destino}")
     route, distance, iterations = algoritmo.find_route(nodo_origen, nodo_destino)
     # Ahora ploteamos sobre un mapa real satelital. Ajusta el zoom entre 5 (grueso) y 16 (fino)
-    plot_route(G, route, distance, zoom_level=5)
+    plot_route(G, route, distance, zoom_level=10)

@@ -33,6 +33,7 @@ class A_star_Algorithm_OSM():
         distance_meters = ox.distance.great_circle(lat1, lon1, lat2, lon2)
         return distance_meters
 
+
     def process_neighbors_A_star(self, current_node_name, destination_name):
         """
         Obtain the neighbours (successors) of the current node.
@@ -41,8 +42,9 @@ class A_star_Algorithm_OSM():
                     append it to the list of visited nodes.
                     append it to the node processing queue (FIFO queue)
 
-                    compute cum_distance
+                    compute accumulated_distance
                     compute flying_distance
+                    compute
         :param current_node:
         :return:
         """
@@ -53,10 +55,15 @@ class A_star_Algorithm_OSM():
         current_accumulated_distance = self.node_info[current_node_name].get('accumulated_distance')
         # para cada vecino neighbour encontrado
         for neighbor in self.graph.neighbors(current_node_name):
+            # check that you can travel from node A to B
+            # if no edge exists, just skip it
+            if not self.graph.has_edge(current_node_name, neighbor):
+                continue
             if neighbor not in self.visited_nodes:
                 # rel distance to travel to the neighbor from current node
                 datos_aristas = self.graph.get_edge_data(current_node_name, neighbor)
                 rel_distance = datos_aristas[0].get('length')
+                # if speed is needed: if datos_aristas[0].get('maxspeed'):
                 new_accumulated_distance = current_accumulated_distance + rel_distance
                 flying_distance = self.compute_flying_distance(neighbor, destination_name)
                 # si no se ha visitado: a) se añade a la lista de visitados y b) se añade a la cola de exploración

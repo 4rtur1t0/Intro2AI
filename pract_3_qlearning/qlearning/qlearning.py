@@ -53,6 +53,15 @@ class QLearning():
 
 
     def update_q_table(self, state, action, next_state, reward):
+        """
+            AQUESTA FUNCIÓ ÉS L'ENCARREGADA D'ACTUALITZAR LA TAULA Q.
+            TODO: UTILITZA DIFERENTS FUNCIONS PER A ACTUALITZAR Q(s,a)
+        :param state:
+        :param action:
+        :param next_state:
+        :param reward:
+        :return:
+        """
         print('State: ', state)
         print('Action: ', action)
         print('Reward: ', reward)
