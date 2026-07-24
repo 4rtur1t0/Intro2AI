@@ -18,12 +18,13 @@ class QLearning():
         # important: la taula Q s'inicialitza amb zeros
         # es pot carregar des d'un fitxer amb el mètode load_q_table
         # es pot guardar a un fitxer amb el mètode save_q_table
+        # s'ha d'actualitzar amb el mètode update_q_table
         self.q_table = np.zeros((self.state_size, self.action_size))
 
         # Hyperparameters
         self.learning_rate = 0.1  # alpha
         self.discount_rate = 0.6  # gamma
-        self.epsilon = 1.0  # Exploration rate
+        self.epsilon = 0.8  # Exploration rate
         self.max_epsilon = 1.0
         self.min_epsilon = 0.01
         self.decay_rate = 0.01  # Exponential decay rate for exploration
@@ -35,13 +36,22 @@ class QLearning():
         for episode in range(total_episodes_train):
             print("Episode: ", episode)
             state, info = self.env.reset()
+            total_reward = 0
             while True:
+                # Step 1: Epsilon-greedy action selection
+                if random.uniform(0, 1) < self.epsilon:
+                    action = self.env.action_space.sample()  # Explore
+                else:
+                    action = np.argmax(self.q_table[state])  # Exploit
                 # toma una acción aleatoria
-                action = self.env.action_space.sample()
+                #action = self.env.action_space.sample()
                 # aplica la acción al entorno
                 next_state, reward, terminated, truncated, info = self.env.step(action)
+                total_reward += reward
                 if terminated or truncated:
                     self.results.q_table = self.q_table
+                    self.results.total_rewards_episode.append(total_reward)
+                    print('Total reward: ', total_reward)
                     break
                 self.update_q_table(state, action, next_state, reward)
                 # Move to next state
@@ -62,11 +72,14 @@ class QLearning():
         :param reward:
         :return:
         """
-        print('State: ', state)
-        print('Action: ', action)
-        print('Reward: ', reward)
-        self.q_table[state, action] = reward
-        # self.q_table[state, action] = (self.q_table[state, action] +
+        #print('State: ', state)
+        #print('Action: ', action)
+        #print('Reward: ', reward)
+        # VERSION 1
+        # self.q_table[state, action] = reward
+        # VERSION 2
+        self.q_table[state, action] = reward + np.max(self.q_table[next_state]) #- self.q_table[state, action]
+        #self.q_table[state, action] = (self.q_table[state, action] +
         #                                self.learning_rate * (
         #                                            reward + self.discount_rate * np.max(self.q_table[next_state]) -
         #                                            self.q_table[state, action]))
@@ -83,7 +96,7 @@ class QLearning():
                 # Step 2: Take action, observe new state and reward
                 next_state, reward, terminated, truncated, info = self.env.step(action)
                 self.results.save_data(episode, next_state, reward)
-                time.sleep(1)
+                time.sleep(.1)
                 if terminated or truncated:
                     break
                 # Move to the next state
@@ -109,6 +122,7 @@ class Results():
         self.data = []
         # store the q_table to be plotted
         self.q_table = []
+        self.total_rewards_episode = []
 
     def save_data(self, episode, state, reward):
         self.data.append([episode, state, reward])
