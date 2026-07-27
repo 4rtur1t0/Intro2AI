@@ -34,7 +34,7 @@ class A_star_Algorithm_OSM():
         return distance_meters
 
 
-    def process_neighbors_A_star(self, current_node_name, destination_name):
+    def process_neighbors(self, current_node_name, destination_name):
         """
         Obtain the neighbours (successors) of the current node.
             For each node:
@@ -127,7 +127,7 @@ class A_star_Algorithm_OSM():
                 # Found solution: destination reached --> reconstruct the route
                 route, distance = self.get_route(current_node_name)
                 return route, distance, iterations
-            self.process_neighbors_A_star(current_node_name, destination_name)
+            self.process_neighbors(current_node_name, destination_name)
             # TODO: CUIDADO! DEBEMOS REORDENAR LA LISTA DE ACUERDO CON NUESTRA HEURÍSTICA
             self.reorder_queue()
         return None, None, iterations  # No route exists

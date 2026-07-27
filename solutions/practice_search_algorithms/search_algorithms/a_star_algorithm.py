@@ -66,8 +66,6 @@ class A_star_Algorithm():
         route = route[::-1]
         return route, total_distance
 
-
-
     def find_route(self, start_name, destination_name):
         """Finds a route using iterative Breadth-First Search."""
         # Safety check: ensure both cities actually exist in our graph
