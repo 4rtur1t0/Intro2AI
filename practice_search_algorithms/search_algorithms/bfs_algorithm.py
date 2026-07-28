@@ -21,7 +21,6 @@ class BFS_Algorithm():
         """
         # Get the list of neighbors of the current node
         neighbors = self.graph.get_neighbors(current_node_name)
-        print('Found neighbors:', neighbors)
         # para cada vecino neighbour encontrado, se comprueba si ya se ha visitado. Si ya se ha visitado, se continúa.
         # si no se ha visitado, se añade a la lista de nodos visitados, se añade al diccionario de información de nodos
         # (node_info) y se añade a la cola
@@ -38,6 +37,9 @@ class BFS_Algorithm():
         :param current_node:
         :return:
         """
+        # En las siguientes líneas se recorre la ruta calculada desde el nodo final
+        # hasta el inicial. Nótese que para cada nodo se ha guardado su padre (el que lo
+        # generó a través de la función neighbours)
         route = []
         total_distance = 0
         while current_node_name is not None:
@@ -45,13 +47,10 @@ class BFS_Algorithm():
             current_node_name = self.node_info[current_node_name].get('parent')
         # Reverse to get start -> destination
         route = route[::-1]
-        # TODO: NOW COMPUTE the total distance of the solution
-        # TODO: CALCULE LA DISTANCIA TOTAL
-        for i in range(len(route) - 1):
-            nodeA = route[i]
-            nodeB = route[i + 1]
-            d = self.graph.get_distance(nodeA, nodeB)
-            total_distance += d
+        ############################################################################
+        # A REALIZAR POR EL ESTUDIANTE: CALCULE LA DISTANCIA TOTAL DE LA RUTA
+        ############################################################################
+
         return route, total_distance
 
     def find_route(self, start_name, destination_name):
@@ -67,11 +66,9 @@ class BFS_Algorithm():
         iterations = 0
         while len(self.queue) > 0:
             iterations += 1
-            print('Current queue is: ', self.queue)
             # pop the current_node from the queue
             current_node = self.queue.pop(0)
             current_node_name = current_node.get('name')
-            print('Current node is: ', current_node)
             if current_node_name == destination_name:
                 print('Found destination! in iterations: ', iterations)
                 route, distance = self.get_route(current_node_name)

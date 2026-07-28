@@ -78,18 +78,18 @@ if __name__ == "__main__":
     # G = ox.graph_from_place(lugar, network_type="drive")
     # OPCIÓN B: Usar un archivo local descargado de Overpass Turbo
     ################################
-    print('Cargando el mapa...')
-    G = ox.graph_from_xml("maps/map0.osm")
-    print('Mapa cargado.')
-    gps_origen = (38.2694, -0.706661)
-    gps_destino = (38.25, -0.694)
-    ################################
-    ################################
     # print('Cargando el mapa...')
-    # G = ox.graph_from_xml("maps/map1.osm")
+    # G = ox.graph_from_xml("maps/map0.osm")
     # print('Mapa cargado.')
     # gps_origen = (38.2694, -0.706661)
-    # gps_destino = (38.35, -0.48)
+    # gps_destino = (38.25, -0.694)
+    ################################
+    ################################
+    print('Cargando el mapa...')
+    G = ox.graph_from_xml("maps/map1.osm")
+    print('Mapa cargado.')
+    gps_origen = (38.2694, -0.706661)
+    gps_destino = (38.35, -0.48)
     ################################
     ###############################
     # print('Cargando el mapa...')

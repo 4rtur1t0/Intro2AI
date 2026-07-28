@@ -35,7 +35,6 @@ class A_star_Algorithm():
                 # si no se ha visitado: a) se añade a la lista de visitados y b) se añade a la cola de exploración
                 # print('Adding new node to the queue:', neighbor)
                 self.visited_nodes.append(neighbor)
-                # TODO: QUITAR parent_map --> debe guardar la ruta el alumno
                 self.node_info[neighbor] = {'parent': current_node_name, 'accumulated_distance': new_accumulated_distance}
                 self.queue.append({'name': neighbor, 'ranking_distance': new_accumulated_distance + flying_distance})
 
@@ -86,7 +85,7 @@ class A_star_Algorithm():
             current_node_name = current_node['name']
             print('Current node is: ', current_node)
             if current_node_name == destination_name:
-                print('Found destination! in iterations: ', iterations)
+                print('Found destination! In iterations: ', iterations)
                 # Found solution: destination reached --> reconstruct the route
                 route, distance = self.get_route(current_node_name)
                 return route, distance, iterations

@@ -73,7 +73,7 @@ class BFS_Algorithm():
             current_node_name = current_node.get('name')
             print('Current node is: ', current_node)
             if current_node_name == destination_name:
-                print('Found destination! in iterations: ', iterations)
+                print('Found destination! In iterations: ', iterations)
                 route, distance = self.get_route(current_node_name)
                 return route, distance, iterations
             self.process_neighbors(current_node_name)

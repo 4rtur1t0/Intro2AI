@@ -5,3 +5,4 @@ networkx
 matplotlib
 geopandas
 scikit-learn
+contextily

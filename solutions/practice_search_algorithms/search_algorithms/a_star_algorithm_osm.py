@@ -55,8 +55,9 @@ class A_star_Algorithm_OSM():
         current_accumulated_distance = self.node_info[current_node_name].get('accumulated_distance')
         # para cada vecino neighbour encontrado
         for neighbor in self.graph.neighbors(current_node_name):
-            # check that you can travel from node A to B
-            # if no edge exists, just skip it
+            # Optional: check that you can travel from node A to B
+            # if no edge exists, just skip it. This is recommended, according
+            # to the osmnx library
             if not self.graph.has_edge(current_node_name, neighbor):
                 continue
             if neighbor not in self.visited_nodes:
