@@ -1,4 +1,4 @@
-from pract_3_qlearning.qlearning.qlearning import QLearning
+from practice_qlearning_1.qlearning.qlearning import QLearning
 import gymnasium as gym
 import numpy as np
 import matplotlib.pyplot as plt

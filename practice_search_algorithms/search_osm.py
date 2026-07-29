@@ -93,4 +93,4 @@ if __name__ == "__main__":
     print(f"ID Nodo Destino más cercano: {nodo_destino}")
     route, distance, iterations = algoritmo.find_route(nodo_origen, nodo_destino)
     # Ahora ploteamos sobre un mapa real satelital. Ajusta el zoom entre 5 (grueso) y 16 (fino)
-    plot_route(G, route, distance, zoom_level=5)
+    plot_route(G, route, distance, zoom_level=16)
