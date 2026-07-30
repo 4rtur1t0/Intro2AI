@@ -3,7 +3,7 @@ import gymnasium as gym
 
 def train_qlearning():
     # use render_mode="human" para observar el entorno gráficamente
-    environment = gym.make('Taxi-v3')
+    environment = gym.make('Taxi-v4')
     qlearning = QLearning(environment=environment)
     qlearning.learning_rate = 0.9  # alpha
     qlearning.discount_rate = 0.95  # gamma
