@@ -15,7 +15,6 @@ def train_qlearning():
     total_results = []
     for alpha in alphas:
         for gamma in gammas:
-            print('Training on alpha: {}, gamma: {}'.format(alpha, gamma))
             # Caution, restart the object so that the Q table and results are reset
             qlearning = QLearning(environment=environment)
             qlearning.learning_rate = alpha

@@ -5,7 +5,7 @@
 import numpy as np
 import random
 import time
-import matplotlib.pyplot as plt
+from tqdm import tqdm
 
 class QLearning():
     def __init__(self, environment):
@@ -17,7 +17,6 @@ class QLearning():
         # se puede cargar desde un fichero con el método load_q_table
         # se puede guardar con el método save_q_table
         self.q_table = np.zeros((self.state_size, self.action_size))
-
         # Hyperparameters
         self.learning_rate = 1.0  # alpha
         self.discount_rate = 1.0  # gamma
@@ -27,17 +26,20 @@ class QLearning():
         self.decay_rate = 0.995  # Exponential decay rate for exploration
         # para guardar resultados
         self.results = []
+        # during training, test each testing_episodes
+        self.testing_episodes = 10
 
     def train(self, total_episodes):
         self.results = []
-        print("Training started!\n\n")
+        print('Training started!', flush=True)
+        pbar = tqdm(total=total_episodes, desc= 'Episodios', colour='green')
         # Training loop
         for episode in range(total_episodes):
-            print("Episode: ", episode)
+            # print("Episode: ", episode)
             state, info = self.env.reset()
             # sum of rewards for each episode
             srt = 0
-            if episode % 5 == 0:
+            if episode % self.testing_episodes == 0:
                 random_action = False
             else:
                 random_action = True
@@ -50,18 +52,19 @@ class QLearning():
                 # Take action, observe new state and reward
                 next_state, reward, terminated, truncated, info = self.env.step(action)
                 srt += reward
+                # Actualiza la tabla Q
+                self.update_q_table(state, action, next_state, reward)
                 if terminated or truncated:
                     if not random_action:
-                        print('Total reward:', srt)
                         self.results.append(srt)
                     break
-                # Actualiza la tabla
-                self.update_q_table(state, action, next_state, reward)
                 # Move to next state
                 state = next_state
+            pbar.update(1)
             # Reduce epsilon (less exploration, more exploitation as time goes on)
             self.epsilon *= self.decay_rate
             self.epsilon = max(self.epsilon, self.min_epsilon)
+        print()
         print("Training finished! Your Q-table is optimized.")
         self.env.close()
         return self.q_table
@@ -107,39 +110,3 @@ class QLearning():
     def save_q_table(self, filename):
         with open(filename, 'wb') as f:
             np.save(f, self.q_table)
-
-#
-# class Results():
-#     def __init__(self):
-#         # store the total reward
-#         self.data = []
-#         # store the q_table to be plotted
-#         self.q_table = []
-#         # save the total sum of rewards for each episode
-#         self.sum_rewards_per_episode = []
-#
-#     def save_data(self, sum_rewards_per_episodei):
-#         # self.data.append([episode, state, reward])
-#         self.sum_rewards_per_episode.append(sum_rewards_per_episodei)
-#
-#     def plot_data(self):
-#         print('Plotting data')
-#         # print('Computing mean reward per epidode')
-#         # self.data = np.array(self.data)
-#         # last_episode = self.data[-1][0]
-#         # sum_rewards_per_episode = []
-#         # for episode in range(last_episode):
-#         #     print(f"Episode: {episode}", end="\r", flush=True)
-#         #     mascara = (self.data[:, 0] == episode)
-#         #     submatrix = self.data[mascara]
-#         #     s = np.sum(submatrix[:, 2])
-#         #     #s = np.mean(submatrix[:, 2])
-#         #     #c = np.cov(submatrix[:, 2])
-#         #     sum_rewards_per_episode.append(s)
-#         plt.plot(range(len(self.sum_rewards_per_episode)), self.sum_rewards_per_episode)
-#         plt.legend(['Sum of rewards at each episode'])
-#         plt.show()
-#         plt.title("Sum of rewards for each episode")
-
-
-

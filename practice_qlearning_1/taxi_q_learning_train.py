@@ -3,14 +3,14 @@ import gymnasium as gym
 
 def train_qlearning():
     # use render_mode="human" para observar el entorno gráficamente
-    environment = gym.make('CliffWalking-v1')
+    try:
+        environment = gym.make('Taxi-v3')
+    except:
+        environment = gym.make('Taxi-v4')
     qlearning = QLearning(environment=environment)
-    qlearning.learning_rate = 0.5  # alpha
-    qlearning.discount_rate = 0.99  # gamma
     print('LET US LEARN NOW!')
-    qlearning.train(total_episodes=100)
-    # guardamos la tabla Q en disco
-    qlearning.save_q_table(filename='qtable.npy')
+    qlearning.train(total_episodes=300)
+    qlearning.save_q_table(filename='qtable_taxi.npy')
 
 if __name__ == "__main__":
     train_qlearning()

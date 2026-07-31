@@ -5,7 +5,7 @@ def test_qlearning():
     environment = gym.make('CliffWalking-v1', render_mode="human")
     qlearning = QLearning(environment=environment)
     qlearning.create_random_q_table()
-    # qlearning_discrete.read_q_table(filename='qtable.npy')
+    #qlearning.read_q_table(filename='qtable.npy')
     print('Testing mode!')
     qlearning.test(total_episodes=1)
 
