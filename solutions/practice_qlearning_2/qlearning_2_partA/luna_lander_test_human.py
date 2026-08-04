@@ -2,59 +2,53 @@ import time
 import gymnasium as gym
 import pygame
 
-# Initialize Gymnasium environment with human rendering mode
-try:
-    env = gym.make("LunarLander-v3", render_mode="human")
-except Exception:
-    env = gym.make("LunarLander-v2", render_mode="human")
+def test_human():
+    # Initialize Gymnasium environment with human rendering mode
+    try:
+        env = gym.make("LunarLander-v3", render_mode="human", )
+    except Exception:
+        env = gym.make("LunarLander-v2", render_mode="human")
+    # Initialize Pygame to capture keyboard input
+    pygame.init()
+    # Action reference:
+    # 0: Do nothing
+    # 1: Fire left engine  (pushes lander RIGHT)
+    # 2: Fire main engine  (pushes lander UP)
+    # 3: Fire right engine (pushes lander LEFT)
+    clock = pygame.time.Clock()
+    FPS = 30  # Control speed of physics simulation
+    state, info = env.reset()
+    total_reward = 0
+    running = True
 
-# Initialize Pygame to capture keyboard input
-pygame.init()
+    print("Controles. FLECHAS: [UP] JET PRINCIPAL | [IZQ] Motor IZQ | [DER] Motor DER")
+    while running:
+        # Handle window close event
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+        # Detect currently held keys
+        keys = pygame.key.get_pressed()
+        # Determine action based on pressed key
+        action = 0  # Default to do nothing
+        if keys[pygame.K_UP]:
+            action = 2  # Main thrust
+        elif keys[pygame.K_LEFT]:
+            action = 3  # Fire right engine to steer LEFT
+        elif keys[pygame.K_RIGHT]:
+            action = 1  # Fire left engine to steer RIGHT
+        # Step the environment
+        next_state, reward, terminated, truncated, _ = env.step(action)
+        total_reward += reward
+        if terminated or truncated:
+            print(f"Episode finished! Total Reward: {total_reward:.2f}")
+            time.sleep(1)  # Brief pause before restarting
+            state, info = env.reset()
+            total_reward = 0
+            clock.tick(FPS)
+    env.close()
+    pygame.quit()
 
-# Action reference:
-# 0: Do nothing
-# 1: Fire left engine  (pushes lander RIGHT)
-# 2: Fire main engine  (pushes lander UP)
-# 3: Fire right engine (pushes lander LEFT)
 
-clock = pygame.time.Clock()
-FPS = 30  # Control speed of physics simulation
-
-state, info = env.reset()
-total_reward = 0
-running = True
-
-print("Controls: [UP] Main Engine | [LEFT] Steer Left | [RIGHT] Steer Right")
-
-while running:
-    # Handle window close event
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            running = False
-
-    # Detect currently held keys
-    keys = pygame.key.get_pressed()
-
-    # Determine action based on pressed key
-    action = 0  # Default to do nothing
-    if keys[pygame.K_UP]:
-        action = 2  # Main thrust
-    elif keys[pygame.K_LEFT]:
-        action = 3  # Fire right engine to steer LEFT
-    elif keys[pygame.K_RIGHT]:
-        action = 1  # Fire left engine to steer RIGHT
-
-    # Step the environment
-    next_state, reward, terminated, truncated, _ = env.step(action)
-    total_reward += reward
-
-    if terminated or truncated:
-        print(f"Episode finished! Total Reward: {total_reward:.2f}")
-        time.sleep(1)  # Brief pause before restarting
-        state, info = env.reset()
-        total_reward = 0
-
-    clock.tick(FPS)
-
-env.close()
-pygame.quit()
+if __name__ == "__main__":
+    test_human()
