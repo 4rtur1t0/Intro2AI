@@ -14,9 +14,7 @@ import copy
 class QLearningDQN():
     def __init__(self, environment):
         self.env = environment
-
-        # Initialize Neural Networks
-        # Se usa un MLPRgressor de Scikit-Learn para aproximar Q
+        # Initialize Neural Networks. Se usa un MLPRgressor de Scikit-Learn para aproximar Q
         self.q_net = MLPRegressor(
             hidden_layer_sizes=(64, 64),
             activation="relu",
@@ -34,7 +32,6 @@ class QLearningDQN():
         self.target_net = copy.deepcopy(self.q_net)
         # El buffer para guardar el mini-batch
         self.replay_buffer = ReplayBuffer(capacity=50000)
-
         # Hyperparameters
         self.batch_size = 64
         self.gamma = 0.99
@@ -43,9 +40,8 @@ class QLearningDQN():
         self.epsilon_decay = 0.995
         self.target_update_freq = 250  # Steps between target network syncs
         self.epsilon = self.epsilon_start
-
         # run test episodes each 1000 episodes
-        self.test_episodes_each = 1000
+        #self.test_episodes_each = 1000
         # para guardar resultados
         self.results = []
 
@@ -137,7 +133,7 @@ class QLearningDQN():
                 # Take action, observe new state and reward
                 next_state, reward, terminated, truncated, info = self.env.step(action)
                 srt += reward
-                time.sleep(.1)
+                time.sleep(.05)
                 if terminated or truncated:
                     self.results.append(srt)
                     print('Total reward of episode:', srt)
