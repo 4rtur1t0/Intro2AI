@@ -1,35 +1,48 @@
 """
-    A solution for QLearning.
-    Es tracta de tabular Q learning on es discretitza un estat continu.
-    Es poden resoldre diferents escenes d'aprenentatge amb aquest mateix disseny.
+    A solution for Deep QLearning.
+    Q learning using a neural network to approximate Q
 """
 import numpy as np
 import random
 import time
-import matplotlib.pyplot as plt
-from collections import defaultdict
 import pickle
+from collections import deque
+from sklearn.neural_network import MLPRegressor
+import copy
 
 
 class QLearningDQN():
     def __init__(self, environment):
         self.env = environment
-        # Initialize Q-table with zeros (500 states x 6 actions)
-        #self.state_size = self.env.observation_space.n
-        self.action_size = self.env.action_space.n
-        # importante, la tabla Q se inicializa a ceros por defecto
-        # se puede cargar desde un fichero con el método load_q_table
-        # se puede guardar con el método save_q_table
-        #self.q_table = np.zeros((self.state_size, self.action_size))
-        self.q_table = defaultdict(lambda: np.zeros(self.action_size))
+
+        # Initialize Neural Networks
+        # Se usa un MLPRgressor de Scikit-Learn para aproximar Q
+        self.q_net = MLPRegressor(
+            hidden_layer_sizes=(64, 64),
+            activation="relu",
+            solver="adam",
+            learning_rate_init=0.0005,
+            max_iter=1,
+        )
+        state_dim = self.env.observation_space.shape[0]
+        action_dim = self.env.action_space.n
+        # Run a single dummy partial_fit to initialize network weights and dimensions
+        dummy_X = np.zeros((1, state_dim))
+        dummy_y = np.zeros((1, action_dim))
+        self.q_net.partial_fit(dummy_X, dummy_y)
+        # Create Target Network via deepcopy
+        self.target_net = copy.deepcopy(self.q_net)
+        # El buffer para guardar el mini-batch
+        self.replay_buffer = ReplayBuffer(capacity=50000)
 
         # Hyperparameters
-        self.learning_rate = 0.3  # alpha
-        self.discount_rate = 1.0  # gamma
-        self.epsilon = 1.0  # Exploration rate
-        self.max_epsilon = 1.0
-        self.min_epsilon = 0.01
-        self.decay_rate = 0.9996  # Exponential decay rate for exploration
+        self.batch_size = 64
+        self.gamma = 0.99
+        self.epsilon_start = 1.0
+        self.epsilon_end = 0.02
+        self.epsilon_decay = 0.995
+        self.target_update_freq = 250  # Steps between target network syncs
+        self.epsilon = self.epsilon_start
 
         # run test episodes each 1000 episodes
         self.test_episodes_each = 1000
@@ -37,55 +50,77 @@ class QLearningDQN():
         self.results = []
 
     def train(self, total_episodes):
-        self.results = []
-        print("Training started!\n\n")
-        # Training loop
-        for episode in range(total_episodes):
-            #print("Episode: ", episode)
-            print(f"Episodio actual: {episode}", end="\r", flush=True)
-            state, info = self.env.reset()
-            state_d = self.discretize_state(state)
-            # sum of rewards for each episode
-            srt = 0
-            # if random_action=False, then only the q_table is used
-            # throughout the whole episode
-            if episode % self.test_episodes_each == 0:
-                random_action = False
-            else:
-                random_action = True
-            while True:
+        total_steps = 0
+        recent_rewards = []
+        print("Training DQN with Scikit-Learn MLPRegressor...")
+        for episode in range(0, total_episodes):
+            state, _ = self.env.reset()
+            total_reward = 0
+            done = False
+            while not done:
+                total_steps += 1
                 # Epsilon-greedy action selection
-                if random_action and (random.uniform(0, 1) < self.epsilon):
-                    action = self.env.action_space.sample()  # Explore
+                if random.uniform(0, 1) < self.epsilon:
+                    action = self.env.action_space.sample()
                 else:
-                    action = np.argmax(self.q_table[state_d])  # Exploit
-                # Take action, observe new state and reward
-                next_state, reward, terminated, truncated, info = self.env.step(action)
-                next_state_d = self.discretize_state(next_state)
-                srt += reward
-                if terminated or truncated:
-                    if not random_action:
-                        print('Total reward:', srt)
-                        print('Total visited states: ', len(self.q_table))
-                        self.results.append(srt)
-                    break
-                # Actualiza la tabla
-                self.update_q_table(state_d, action, next_state_d, reward)
-                # Move to next state
-                state_d = next_state_d
-            # Reduce epsilon (less exploration, more exploitation as time goes on)
-            self.epsilon *= self.decay_rate
-            self.epsilon = max(self.epsilon, self.min_epsilon)
-        print("Training finished! Your Q-table is optimized.")
+                    # Predict Q-values for current state. Se usa Q-online para
+                    # hallar Q(s, a)... que tiene como salida 4 valores
+                    q_values = self.q_net.predict(state.reshape(1, -1))[0]
+                    # se halla el máximo de los 4 valores aproximados
+                    action = np.argmax(q_values)
+                # apply action on environment and agent
+                next_state, reward, terminated, truncated, _ = self.env.step(action)
+                done = terminated or truncated
+                # Store transition (use terminated for true environment ends)
+                self.replay_buffer.push(state, action,
+                                        reward, next_state,
+                                        float(terminated))
+                state = next_state
+                total_reward += reward
+                # IMPORTANTE: la actualización de la tabla Q se cambia
+                # por la estimación de la red neuronal que la aproxima
+                # en esta función se agrupan todas las operaciones sobre las redes neuronales
+                self.train_networks(total_steps=total_steps)
+            # reducimos epsilon, calculamos la evolución
+            self.epsilon = max(self.epsilon_end, self.epsilon * self.epsilon_decay)
+            recent_rewards.append(total_reward)
+            avg_reward = np.mean(recent_rewards[-50:])
+            print(f"Episode {episode:4d} | Reward: {total_reward:6.1f} | Avg (50): {avg_reward:6.1f} | Epsilon: {self.epsilon:.2f}",
+                end="\r",
+                flush=True)
+            if episode % 50 == 0:
+                print(f"\nEpisode {episode:4d} | Average Reward (last 50): {avg_reward:6.1f}")
         self.env.close()
-        return self.q_table
+        return self.q_net
 
-    def update_q_table(self, state_d, action, next_state_d, reward):
-        # Update Q-table using the Bellman Equation
-         self.q_table[state_d][action] = (self.q_table[state_d][action] +
-                                        self.learning_rate * (
-                                                    reward + self.discount_rate * np.max(self.q_table[next_state_d]) -
-                                                    self.q_table[state_d][action]))
+    def train_networks(self, total_steps):
+        # Train Network
+        if len(self.replay_buffer) >= self.batch_size:
+            states, actions, rewards, next_states, dones = self.replay_buffer.sample(self.batch_size)
+            # Predict current Q-values for all actions
+            target_y = self.q_net.predict(states)
+            # Predict next-state Q-values using Target Network
+            # Esta es Q^
+            next_q_values = self.target_net.predict(next_states)
+            max_next_q = np.max(next_q_values, axis=1)
+            # Bellman Update: update ONLY the target Q-value for the action taken
+            # IMPORTANTE: la red neuronal aproxima la salida Q(s, a) para cada una de las
+            # 4 acciones posibles. En este bucle, calculamos los pares (X, y) para
+            # actualizar q_net
+            for i in range(self.batch_size):
+                a = actions[i]
+                r = rewards[i]
+                d = dones[i]
+                if d:
+                    target_y[i, a] = r
+                else:
+                    target_y[i, a] = r + self.gamma * max_next_q[i]
+            # Perform an incremental gradient descent step
+            # SOLAMENTE un paso de actualización
+            self.q_net.partial_fit(states, target_y)
+        # Sync Target Network periodically
+        if total_steps % self.target_update_freq == 0:
+            self.target_net = copy.deepcopy(self.q_net)
 
     def test(self, total_episodes):
         print('Test started')
@@ -93,14 +128,14 @@ class QLearningDQN():
         for episode in range(total_episodes):
             print("Episode: ", episode)
             state, info = self.env.reset()
-            state_d = self.discretize_state(state)
             srt = 0
             while True:
-                # Greedy action selection
-                action = np.argmax(self.q_table[state_d])  # Exploit
+                # Greedy action selection using the q_net table
+                q_values = self.q_net.predict(state.reshape(1, -1))[0]
+                # se halla el máximo de los 4 valores aproximados
+                action = np.argmax(q_values)
                 # Take action, observe new state and reward
                 next_state, reward, terminated, truncated, info = self.env.step(action)
-                next_state_d = self.discretize_state(next_state)
                 srt += reward
                 time.sleep(.1)
                 if terminated or truncated:
@@ -108,36 +143,38 @@ class QLearningDQN():
                     print('Total reward of episode:', srt)
                     break
                 # Move to the next state
-                state_d = next_state_d
+                state = next_state
         print("Test finished!")
         self.env.close()
 
-    def create_random_q_table(self):
-        # Distribución normal centrada en 0 (media=0, std=1)
-        self.q_table = defaultdict(lambda: np.random.randn(self.action_size))
-    #    self.q_table = np.random.rand(self.state_size, self.action_size)
-
-    def read_q_table(self, filename):
+    def read_model(self, filename):
         with open(filename, "rb") as f:
-            raw_q_table = pickle.load(f)
-        self.q_table = defaultdict(lambda: np.zeros(self.action_size), raw_q_table)
+            self.q_net = pickle.load(f)
+        self.target_net = copy.deepcopy(self.q_net)
 
-    def save_q_table(self, filename):
-        with open(filename, 'wb') as f:
-            pickle.dump(dict(self.q_table), f)
+    def save_model(self, filename):
+        with open(filename, "wb") as f:
+            pickle.dump(self.q_net, f)
 
-    def discretize_state(self, state):
-        """Maps the 8D continuous state into a discrete tuple of bin indices."""
-        x, y, vx, vy, angle, ang_vel, leg1, leg2 = state
 
-        return (
-            int(np.digitize(x, X_BINS)),
-            int(np.digitize(y, Y_BINS)),
-            int(np.digitize(vx, VX_BINS)),
-            int(np.digitize(vy, VY_BINS)),
-            int(np.digitize(angle, ANGLE_BINS)),
-            int(np.digitize(ang_vel, ANG_VEL_BINS)),
-            int(leg1),
-            int(leg2),
-        )
 
+
+# 3. Load the model back
+
+
+# Replay Buffer
+class ReplayBuffer:
+
+    def __init__(self, capacity=50000):
+        self.buffer = deque(maxlen=capacity)
+
+    def push(self, state, action, reward, next_state, done):
+        self.buffer.append((state, action, reward, next_state, done))
+
+    def sample(self, batch_size):
+        samples = random.sample(self.buffer, batch_size)
+        states, actions, rewards, next_states, dones = zip(*samples)
+        return np.array(states), np.array(actions), np.array(rewards), np.array(next_states), np.array(dones)
+
+    def __len__(self):
+        return len(self.buffer)

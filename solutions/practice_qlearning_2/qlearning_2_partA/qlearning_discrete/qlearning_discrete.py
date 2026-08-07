@@ -137,7 +137,6 @@ class QLearningD():
     def discretize_state(self, state):
         """Maps the 8D continuous state into a discrete tuple of bin indices."""
         x, y, vx, vy, angle, ang_vel, leg1, leg2 = state
-
         return (
             int(np.digitize(x, X_BINS)),
             int(np.digitize(y, Y_BINS)),

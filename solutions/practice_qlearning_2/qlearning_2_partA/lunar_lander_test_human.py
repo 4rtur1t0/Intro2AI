@@ -2,12 +2,13 @@ import time
 import gymnasium as gym
 import pygame
 
+
 def test_human():
     # Initialize Gymnasium environment with human rendering mode
     try:
-        env = gym.make("LunarLander-v3", render_mode="human", )
+        env = gym.make("LunarLander-v3", render_mode="human", gravity=-1.620)
     except Exception:
-        env = gym.make("LunarLander-v2", render_mode="human")
+        env = gym.make("LunarLander-v2", render_mode="human", gravity=-1.620)
     # Initialize Pygame to capture keyboard input
     pygame.init()
     # Action reference:
