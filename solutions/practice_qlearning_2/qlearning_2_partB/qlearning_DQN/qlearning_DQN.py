@@ -9,14 +9,27 @@ import pickle
 from collections import deque
 from sklearn.neural_network import MLPRegressor
 import copy
+import json
+import os
 
 
 class QLearningDQN():
     def __init__(self, environment):
         self.env = environment
+        # Hyperparameters
+        self.batch_size = 64
+        #self.gamma = 0.99
+        self.gamma = 1.0
+        self.epsilon_start = 1.0
+        self.epsilon_end = 0.02
+        #self.epsilon_decay = 0.995
+        self.epsilon_decay = 0.98
+        self.target_update_freq = 250  # Steps between target network syncs
+        self.epsilon = self.epsilon_start
+        self.hidden_layer_sizes = (64, 64)
         # Initialize Neural Networks. Se usa un MLPRgressor de Scikit-Learn para aproximar Q
         self.q_net = MLPRegressor(
-            hidden_layer_sizes=(64, 64),
+            hidden_layer_sizes=self.hidden_layer_sizes,
             activation="relu",
             solver="adam",
             learning_rate_init=0.0005,
@@ -32,14 +45,7 @@ class QLearningDQN():
         self.target_net = copy.deepcopy(self.q_net)
         # El buffer para guardar el mini-batch
         self.replay_buffer = ReplayBuffer(capacity=50000)
-        # Hyperparameters
-        self.batch_size = 64
-        self.gamma = 0.99
-        self.epsilon_start = 1.0
-        self.epsilon_end = 0.02
-        self.epsilon_decay = 0.995
-        self.target_update_freq = 250  # Steps between target network syncs
-        self.epsilon = self.epsilon_start
+
         # run test episodes each 1000 episodes
         #self.test_episodes_each = 1000
         # para guardar resultados
@@ -81,6 +87,7 @@ class QLearningDQN():
             self.epsilon = max(self.epsilon_end, self.epsilon * self.epsilon_decay)
             recent_rewards.append(total_reward)
             avg_reward = np.mean(recent_rewards[-50:])
+            self.results.append([total_reward, avg_reward, 100*self.epsilon])
             print(f"Episode {episode:4d} | Reward: {total_reward:6.1f} | Avg (50): {avg_reward:6.1f} | Epsilon: {self.epsilon:.2f}",
                 end="\r",
                 flush=True)
@@ -124,7 +131,7 @@ class QLearningDQN():
         for episode in range(total_episodes):
             print("Episode: ", episode)
             state, info = self.env.reset()
-            srt = 0
+            total_reward = 0
             while True:
                 # Greedy action selection using the q_net table
                 q_values = self.q_net.predict(state.reshape(1, -1))[0]
@@ -132,11 +139,11 @@ class QLearningDQN():
                 action = np.argmax(q_values)
                 # Take action, observe new state and reward
                 next_state, reward, terminated, truncated, info = self.env.step(action)
-                srt += reward
+                total_reward += reward
                 time.sleep(.05)
                 if terminated or truncated:
-                    self.results.append(srt)
-                    print('Total reward of episode:', srt)
+                    self.results.append(total_reward)
+                    print('Total reward of episode:', total_reward)
                     break
                 # Move to the next state
                 state = next_state
@@ -152,11 +159,21 @@ class QLearningDQN():
         with open(filename, "wb") as f:
             pickle.dump(self.q_net, f)
 
-
-
-
-# 3. Load the model back
-
+    def save_results(self):
+        experiment_filename = f"results/gamma_{self.gamma:.2f}_eps_dcy_{self.epsilon_decay:.2f}_net_{self.hidden_layer_sizes}.json"
+        experiment_data = {
+            "experiment_filename": experiment_filename,
+            "params": {"gamma": 0.99, "hidden_layers": self.hidden_layer_sizes,
+                       "epsilon_decay": self.epsilon_decay},
+            "episodes": list(range(len(self.results))),
+            "rewards": [r[0] for r in self.results],
+            "avg_rewards": [r[1] for r in self.results],
+            "100*epsilon": [r[2] for r in self.results]
+        }
+        # Ensure directory exists before writing
+        os.makedirs("results", exist_ok=True)
+        with open(experiment_filename, "w") as f:
+            json.dump(experiment_data, f)
 
 # Replay Buffer
 class ReplayBuffer:
