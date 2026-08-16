@@ -11,6 +11,7 @@ from sklearn.neural_network import MLPRegressor
 import copy
 import json
 import os
+import datetime
 
 
 class QLearningDQN():
@@ -18,14 +19,13 @@ class QLearningDQN():
         self.env = environment
         # Hyperparameters
         self.batch_size = 64
-        #self.gamma = 0.99
         self.gamma = 1.0
-        self.epsilon_start = 1.0
-        self.epsilon_end = 0.02
-        #self.epsilon_decay = 0.995
-        self.epsilon_decay = 0.98
+        self.epsilon_max = 1.0
+        self.epsilon_min = 0.01
+        self.epsilon_step = None  # computed later
+        self.epsilon_percentage = 0.95  # porcentaje de episodios para llegar a epsilon_min
+        self.epsilon = self.epsilon_max
         self.target_update_freq = 250  # Steps between target network syncs
-        self.epsilon = self.epsilon_start
         self.hidden_layer_sizes = (64, 64)
         # Initialize Neural Networks. Se usa un MLPRgressor de Scikit-Learn para aproximar Q
         self.q_net = MLPRegressor(
@@ -45,13 +45,13 @@ class QLearningDQN():
         self.target_net = copy.deepcopy(self.q_net)
         # El buffer para guardar el mini-batch
         self.replay_buffer = ReplayBuffer(capacity=50000)
-
-        # run test episodes each 1000 episodes
-        #self.test_episodes_each = 1000
         # para guardar resultados
         self.results = []
+        self.avg_window = 100
 
     def train(self, total_episodes):
+        decay_episodes = int(total_episodes * self.epsilon_percentage)
+        self.epsilon_step = (self.epsilon_max - self.epsilon_min) / decay_episodes
         total_steps = 0
         recent_rewards = []
         print("Training DQN with Scikit-Learn MLPRegressor...")
@@ -65,8 +65,7 @@ class QLearningDQN():
                 if random.uniform(0, 1) < self.epsilon:
                     action = self.env.action_space.sample()
                 else:
-                    # Predict Q-values for current state. Se usa Q-online para
-                    # hallar Q(s, a)... que tiene como salida 4 valores
+                    # Se usa Q-online para hallar Q(s, a)... que tiene como salida 4 valores
                     q_values = self.q_net.predict(state.reshape(1, -1))[0]
                     # se halla el máximo de los 4 valores aproximados
                     action = np.argmax(q_values)
@@ -79,34 +78,37 @@ class QLearningDQN():
                                         float(terminated))
                 state = next_state
                 total_reward += reward
-                # IMPORTANTE: la actualización de la tabla Q se cambia
-                # por la estimación de la red neuronal que la aproxima
-                # en esta función se agrupan todas las operaciones sobre las redes neuronales
+                # IMPORTANTE: se entrena la red neuronal online en la siguiente función
                 self.train_networks(total_steps=total_steps)
             # reducimos epsilon, calculamos la evolución
-            self.epsilon = max(self.epsilon_end, self.epsilon * self.epsilon_decay)
+            self.epsilon -= self.epsilon_step
+            self.epsilon = max(self.epsilon_min, self.epsilon)
             recent_rewards.append(total_reward)
-            avg_reward = np.mean(recent_rewards[-50:])
+            avg_reward = np.mean(recent_rewards[-self.avg_window:])
             self.results.append([total_reward, avg_reward, 100*self.epsilon])
-            print(f"Episode {episode:4d} | Reward: {total_reward:6.1f} | Avg (50): {avg_reward:6.1f} | Epsilon: {self.epsilon:.2f}",
-                end="\r",
-                flush=True)
-            if episode % 50 == 0:
-                print(f"\nEpisode {episode:4d} | Average Reward (last 50): {avg_reward:6.1f}")
+            print(f"Episode {episode:4d} | Total reward: {total_reward:6.1f} | Avg (100): {avg_reward:6.1f} | Epsilon: {self.epsilon:.2f}",
+                  end="\r",flush=True)
+            if episode % 20 == 0:
+                print() # flush print
         self.env.close()
         return self.q_net
 
     def train_networks(self, total_steps):
-        # Train Network
+        """
+        Train the online network Q (online, q_net)
+        Use target_network for stability to generate the targets_y.
+        :param total_steps:
+        :return:
+        """
         if len(self.replay_buffer) >= self.batch_size:
             states, actions, rewards, next_states, dones = self.replay_buffer.sample(self.batch_size)
             # Predict current Q-values for all actions
             target_y = self.q_net.predict(states)
             # Predict next-state Q-values using Target Network
-            # Esta es Q^
+            # target_net es Q^
             next_q_values = self.target_net.predict(next_states)
             max_next_q = np.max(next_q_values, axis=1)
-            # Bellman Update: update ONLY the target Q-value for the action taken
+            # Bellman Update: se actualiza los Q-values solamente para la acción a que se realizó
             # IMPORTANTE: la red neuronal aproxima la salida Q(s, a) para cada una de las
             # 4 acciones posibles. En este bucle, calculamos los pares (X, y) para
             # actualizar q_net
@@ -118,8 +120,7 @@ class QLearningDQN():
                     target_y[i, a] = r
                 else:
                     target_y[i, a] = r + self.gamma * max_next_q[i]
-            # Perform an incremental gradient descent step
-            # SOLAMENTE un paso de actualización
+            # SOLAMENTE un paso de actualización por gradient descent
             self.q_net.partial_fit(states, target_y)
         # Sync Target Network periodically
         if total_steps % self.target_update_freq == 0:
@@ -134,7 +135,7 @@ class QLearningDQN():
             total_reward = 0
             while True:
                 # Greedy action selection using the q_net table
-                q_values = self.q_net.predict(state.reshape(1, -1))[0]
+                q_values = self.q_net.predict(state.reshape(1, -1))#[0]
                 # se halla el máximo de los 4 valores aproximados
                 action = np.argmax(q_values)
                 # Take action, observe new state and reward
@@ -160,11 +161,13 @@ class QLearningDQN():
             pickle.dump(self.q_net, f)
 
     def save_results(self):
-        experiment_filename = f"results/gamma_{self.gamma:.2f}_eps_dcy_{self.epsilon_decay:.2f}_net_{self.hidden_layer_sizes}.json"
+        now = datetime.datetime.now()
+        time_string = now.strftime("%Y%m%d_%H%M%S")
+        experiment_filename = f"results/gamma_{self.gamma:.2f}_eps_perc_{self.epsilon_percentage:.2f}_net_{self.hidden_layer_sizes}_{time_string}.json"
         experiment_data = {
             "experiment_filename": experiment_filename,
             "params": {"gamma": 0.99, "hidden_layers": self.hidden_layer_sizes,
-                       "epsilon_decay": self.epsilon_decay},
+                       "epsilon_percentage": self.epsilon_percentage},
             "episodes": list(range(len(self.results))),
             "rewards": [r[0] for r in self.results],
             "avg_rewards": [r[1] for r in self.results],

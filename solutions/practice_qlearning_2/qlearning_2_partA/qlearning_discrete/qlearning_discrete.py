@@ -6,9 +6,10 @@
 import numpy as np
 import random
 import time
-#import matplotlib.pyplot as plt
 from collections import defaultdict
 import pickle
+import os
+import json
 
 # Non-uniform bin boundaries: tighter resolution around 0 for fine control
 X_BINS = np.array([-0.4, -0.15, -0.05, 0.05, 0.15, 0.4])
@@ -20,80 +21,80 @@ ANG_VEL_BINS = np.array([-0.6, -0.2, 0.2, 0.6])
 
 
 class QLearningD():
+    """
+    Q learning con discretización
+    """
     def __init__(self, environment):
         self.env = environment
-        # Initialize Q-table with zeros (500 states x 6 actions)
-        #self.state_size = self.env.observation_space.n
         self.action_size = self.env.action_space.n
-        # importante, la tabla Q se inicializa a ceros por defecto
-        # se puede cargar desde un fichero con el método load_q_table
-        # se puede guardar con el método save_q_table
-        #self.q_table = np.zeros((self.state_size, self.action_size))
+        # importante, la tabla Q la constituye un diccionario.
+        # Devuelve ceros si se solicita una clave que no existe.
         self.q_table = defaultdict(lambda: np.zeros(self.action_size))
-
         # Hyperparameters
-        self.learning_rate = 0.3  # alpha
-        self.discount_rate = 1.0  # gamma
+        self.alpha = 0.2  # alpha
+        self.gamma = 0.99  # gamma
         self.epsilon = 1.0  # Exploration rate
         self.max_epsilon = 1.0
         self.min_epsilon = 0.01
-        self.decay_rate = 0.9996  # Exponential decay rate for exploration
-
-        # run test episodes each 1000 episodes
-        self.test_episodes_each = 1000
+        #self.epsilon_decay = 0.99999  # Exponential decay rate for exploration
+        self.avg_window = 100 # una ventana para hacer la media móvil del resultado
         # para guardar resultados
         self.results = []
 
     def train(self, total_episodes):
+        decay_episodes = int(total_episodes*0.8) # leave 20 % at min epsilon
+        epsilon_step = (self.max_epsilon - self.min_epsilon) / decay_episodes
         self.results = []
+        recent_rewards = []
         print("Training started!\n\n")
         # Training loop
         for episode in range(total_episodes):
-            #print("Episode: ", episode)
-            print(f"Episodio actual: {episode}", end="\r", flush=True)
             state, info = self.env.reset()
             state_d = self.discretize_state(state)
             # sum of rewards for each episode
-            srt = 0
-            # if random_action=False, then only the q_table is used
-            # throughout the whole episode
-            if episode % self.test_episodes_each == 0:
-                random_action = False
-            else:
-                random_action = True
+            total_reward = 0
             while True:
                 # Epsilon-greedy action selection
-                if random_action and (random.uniform(0, 1) < self.epsilon):
+                if random.uniform(0, 1) < self.epsilon:
                     action = self.env.action_space.sample()  # Explore
                 else:
                     action = np.argmax(self.q_table[state_d])  # Exploit
                 # Take action, observe new state and reward
                 next_state, reward, terminated, truncated, info = self.env.step(action)
                 next_state_d = self.discretize_state(next_state)
-                srt += reward
-                if terminated or truncated:
-                    if not random_action:
-                        print('Total reward:', srt)
-                        print('Total visited states: ', len(self.q_table))
-                        self.results.append(srt)
-                    break
+                total_reward += reward
                 # Actualiza la tabla
-                self.update_q_table(state_d, action, next_state_d, reward)
+                done = terminated or truncated
+                self.update_q_table(state_d, action, next_state_d, reward, done)
+                if done:
+                    break
                 # Move to next state
                 state_d = next_state_d
             # Reduce epsilon (less exploration, more exploitation as time goes on)
-            self.epsilon *= self.decay_rate
-            self.epsilon = max(self.epsilon, self.min_epsilon)
-        print("Training finished! Your Q-table is optimized.")
-        self.env.close()
+            #self.epsilon = max(self.min_epsilon, self.epsilon * self.epsilon_decay)
+            self.epsilon -= epsilon_step
+            self.epsilon = max(self.min_epsilon, self.epsilon)
+            recent_rewards.append(total_reward)
+            avg_reward = np.mean(recent_rewards[-self.avg_window:])
+            self.results.append([total_reward, avg_reward, 100 * self.epsilon, len(self.q_table)/1000])
+            print(f"Episode {episode:4d} | Reward: {total_reward:6.1f} | Avg (last 100): {avg_reward:6.1f} | Epsilon: {self.epsilon:.2f}",
+                  end="\r", flush=True)
+            if episode % self.avg_window == 0:
+                print()
+            self.env.close()
         return self.q_table
 
-    def update_q_table(self, state_d, action, next_state_d, reward):
-        # Update Q-table using the Bellman Equation
-         self.q_table[state_d][action] = (self.q_table[state_d][action] +
-                                        self.learning_rate * (
-                                                    reward + self.discount_rate * np.max(self.q_table[next_state_d]) -
-                                                    self.q_table[state_d][action]))
+    def update_q_table(self, state_d, action, next_state_d, reward, done):
+        if not done:
+            # Update Q-table using the Bellman Equation
+            self.q_table[state_d][action] = self.q_table[state_d][action] + \
+                                            self.alpha * (reward
+                                                          + self.gamma * np.max(self.q_table[next_state_d]) -
+                                                            self.q_table[state_d][action])
+        else:
+            # Update Q-table using the Bellman Equation, with Q(s',a)=0
+            self.q_table[state_d][action] = (self.q_table[state_d][action] +\
+                                             self.alpha * (reward - self.q_table[state_d][action]))
 
     def test(self, total_episodes):
         print('Test started')
@@ -147,4 +148,19 @@ class QLearningD():
             int(leg1),
             int(leg2),
         )
+
+    def save_results(self):
+        experiment_filename = (f"results/gamma_{self.gamma:.2f}_alpha_{self.alpha:.2f}.json")
+        experiment_data = {
+            "experiment_filename": experiment_filename,
+            "params": {"gamma": self.gamma, "alpha": self.alpha},
+            "episodes": list(range(len(self.results))),
+            "rewards": [r[0] for r in self.results],
+            "avg_rewards": [r[1] for r in self.results],
+            "100*epsilon": [r[2] for r in self.results]
+        }
+        # Ensure directory exists before writing
+        os.makedirs("results", exist_ok=True)
+        with open(experiment_filename, "w") as f:
+            json.dump(experiment_data, f)
 

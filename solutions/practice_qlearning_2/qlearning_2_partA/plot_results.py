@@ -2,7 +2,7 @@ import plotly.graph_objects as go
 import json
 import glob
 
-def build_results_html():
+def plot_results_html():
     # Create an interactive figure
     fig = go.Figure()
     # Load all experiment JSON files in directory
@@ -18,27 +18,6 @@ def build_results_html():
             name=data["experiment_filename"],
             hovertemplate="Episode %{x}<br>Avg Reward: %{y:.2f}"
         ))
-
-        # Format the text using HTML tags supported by Plotly
-        #info_text = (f"<b>Experiment Data:</b><br>Gamma: {data['params']['gamma']}<br>Epsilon percentage: {data['params']['epsilon_percentage']}")
-        #info_text = (f"<b>Experiment Data:</b><br>Gamma: {data['params']['gamma']}")
-        info_text = (f"<b>Experiment Data:</b><br>Gamma: {data['params']['gamma']}<br>Epsilon percentage: {data['params']['epsilon_percentage']}")
-
-        # Add the text box to the side of the plot
-        fig.add_annotation(
-            text=info_text,
-            align='left',
-            showarrow=False,
-            xref='paper', yref='paper',
-            x=0.85, y=0.5,  # Adjust these coordinates to place it outside the plot area
-            bordercolor='black',
-            borderwidth=1,
-            borderpad=10,
-            bgcolor="white"
-        )
-
-        # Make room on the right side for the text box
-        fig.update_layout(margin=dict(r=150))
 
     # Customize interactive layout
     fig.update_layout(
@@ -58,4 +37,4 @@ def build_results_html():
     fig.write_html("lunar_lander_experiments.html")
 
 if __name__ == "__main__":
-    build_results_html()
+    plot_results_html()

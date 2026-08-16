@@ -7,7 +7,6 @@ def test_qlearning():
     except Exception:
         environment = gym.make("LunarLander-v2", render_mode="human")
     qlearningd = QLearningD(environment=environment)
-    #qlearningd.create_random_q_table()
     qlearningd.read_q_table(filename='qtable_lunar_lander.pkl')
     print('Testing mode!')
     qlearningd.test(total_episodes=10)
