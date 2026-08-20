@@ -10,7 +10,7 @@ def train_qlearning():
     print('LET US LEARN NOW!')
     qlearning.train(total_episodes=100)
     # guardamos la tabla Q en disco
-    qlearning.save_q_table(filename='qtable.npy')
+    qlearning.save_q_table(filename='qtable_cliff.npy')
 
 if __name__ == "__main__":
     train_qlearning()

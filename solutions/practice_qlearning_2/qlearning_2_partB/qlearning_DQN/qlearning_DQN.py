@@ -12,21 +12,24 @@ import copy
 import json
 import os
 import datetime
+from libAI.epsilon_greedy import EpsilonGreedy
 
 
 class QLearningDQN():
-    def __init__(self, environment):
+    def __init__(self, environment, params={}):
         self.env = environment
         # Hyperparameters
         self.batch_size = 64
-        self.gamma = 1.0
-        self.epsilon_max = 1.0
-        self.epsilon_min = 0.01
-        self.epsilon_step = None  # computed later
-        self.epsilon_percentage = 0.95  # porcentaje de episodios para llegar a epsilon_min
-        self.epsilon = self.epsilon_max
+        self.gamma = params.get('gamma', 1.0)
+        self.epsilon_max = params.get('epsilon_max', 1.0)
+        self.epsilon_min = params.get('epsilon_min', 0.01)
+        #self.epsilon_step = None  # computed later
+        self.epsilon_percentage = params.get('epsilon_percentage', 0.25) # ratio de episodios para llegar a epsilon_min
+        # Each 50 episodes of training, test 10 times without updating your knowledge
+        self.training_tests = params.get('training_tests', (50, 10))
+        #self.epsilon = self.epsilon_max
         self.target_update_freq = 250  # Steps between target network syncs
-        self.hidden_layer_sizes = (64, 64)
+        self.hidden_layer_sizes = params.get('hidden_layer_sizes', (64, 64))
         # Initialize Neural Networks. Se usa un MLPRgressor de Scikit-Learn para aproximar Q
         self.q_net = MLPRegressor(
             hidden_layer_sizes=self.hidden_layer_sizes,
@@ -46,29 +49,25 @@ class QLearningDQN():
         # El buffer para guardar el mini-batch
         self.replay_buffer = ReplayBuffer(capacity=50000)
         # para guardar resultados
+        #self.recent_rewards = []
         self.results = []
         self.avg_window = 100
 
     def train(self, total_episodes):
-        decay_episodes = int(total_episodes * self.epsilon_percentage)
-        self.epsilon_step = (self.epsilon_max - self.epsilon_min) / decay_episodes
+        epsilon_greedy = EpsilonGreedy(total_episodes=total_episodes,
+                                       epsilon_max=self.epsilon_max, epsilon_min=self.epsilon_min,
+                                       percentage_target=self.epsilon_percentage)
         total_steps = 0
         recent_rewards = []
+        self.results = []
         print("Training DQN with Scikit-Learn MLPRegressor...")
-        for episode in range(0, total_episodes):
+        for episode in range(total_episodes):
             state, _ = self.env.reset()
             total_reward = 0
             done = False
             while not done:
                 total_steps += 1
-                # Epsilon-greedy action selection
-                if random.uniform(0, 1) < self.epsilon:
-                    action = self.env.action_space.sample()
-                else:
-                    # Se usa Q-online para hallar Q(s, a)... que tiene como salida 4 valores
-                    q_values = self.q_net.predict(state.reshape(1, -1))[0]
-                    # se halla el máximo de los 4 valores aproximados
-                    action = np.argmax(q_values)
+                action = self.exploration_exploitation(state, epsilon_greedy)
                 # apply action on environment and agent
                 next_state, reward, terminated, truncated, _ = self.env.step(action)
                 done = terminated or truncated
@@ -78,19 +77,19 @@ class QLearningDQN():
                                         float(terminated))
                 state = next_state
                 total_reward += reward
-                # IMPORTANTE: se entrena la red neuronal online en la siguiente función
+                # IMPORTANTE: se entrena la red neuronal online en la train_networks
                 self.train_networks(total_steps=total_steps)
-            # reducimos epsilon, calculamos la evolución
-            self.epsilon -= self.epsilon_step
-            self.epsilon = max(self.epsilon_min, self.epsilon)
+            # reducimos epsilon
+            epsilon_greedy.step()
+            self.inline_test(episode, epsilon_greedy)
             recent_rewards.append(total_reward)
             avg_reward = np.mean(recent_rewards[-self.avg_window:])
-            self.results.append([total_reward, avg_reward, 100*self.epsilon])
-            print(f"Episode {episode:4d} | Total reward: {total_reward:6.1f} | Avg (100): {avg_reward:6.1f} | Epsilon: {self.epsilon:.2f}",
-                  end="\r",flush=True)
+            # self.results.append([total_reward, avg_reward, 100*epsilon_greedy.epsilon])
+            print(f"TRAIN Episode {episode:4d} | Total reward: {total_reward:6.1f} | Avg (100): {avg_reward:6.1f} | Epsilon: {epsilon_greedy.epsilon:.2f}",
+                   end="\r",flush=True)
             if episode % 20 == 0:
-                print() # flush print
-        self.env.close()
+                 print()
+        #self.env.close()
         return self.q_net
 
     def train_networks(self, total_steps):
@@ -126,11 +125,22 @@ class QLearningDQN():
         if total_steps % self.target_update_freq == 0:
             self.target_net = copy.deepcopy(self.q_net)
 
-    def test(self, total_episodes):
-        print('Test started')
-        # test loop
+    def exploration_exploitation(self, state, epsilon_greedy):
+        # Epsilon-greedy action selection
+        if epsilon_greedy.random_action():  # random.uniform(0, 1) < self.epsilon:
+            action = self.env.action_space.sample()
+        else:
+            # Se usa Q-online para hallar Q(s, a)... que tiene como salida 4 valores
+            q_values = self.q_net.predict(state.reshape(1, -1))[0]
+            # se halla el máximo de los 4 valores aproximados
+            action = np.argmax(q_values)
+        return action
+
+    def test(self, total_episodes, save_results=False):
+        recent_rewards = []
+        #self.results = []
         for episode in range(total_episodes):
-            print("Episode: ", episode)
+            #print("Episode: ", episode)
             state, info = self.env.reset()
             total_reward = 0
             while True:
@@ -141,15 +151,30 @@ class QLearningDQN():
                 # Take action, observe new state and reward
                 next_state, reward, terminated, truncated, info = self.env.step(action)
                 total_reward += reward
-                time.sleep(.05)
+                if self.env.render_mode == 'human':
+                    time.sleep(.05)
                 if terminated or truncated:
-                    self.results.append(total_reward)
-                    print('Total reward of episode:', total_reward)
                     break
                 # Move to the next state
                 state = next_state
-        print("Test finished!")
-        self.env.close()
+            recent_rewards.append(total_reward)
+            #avg_reward = np.mean(self.recent_rewards[-self.avg_window:])
+            if save_results:
+                self.results.append([episode, total_reward, 0])
+            print(f"Episode {episode:4d} | Total reward: {total_reward:6.1f}", end='\r')
+            if episode % 10 == 0:
+                print()
+        #print("Test finished!")
+        #self.env.close()
+        return recent_rewards
+
+    def inline_test(self, episode, epsilon_greedy):
+        # inline test
+        if episode % self.training_tests[0] == 0:
+            test_train_results = self.test(total_episodes=self.training_tests[1])
+            test_train_results = np.mean(test_train_results)
+            self.results.append([episode, test_train_results, 100 * epsilon_greedy.epsilon])
+            print(f"INLINE TEST {episode:4d} | Avg reward ({self.training_tests[1]}): {test_train_results:6.1f} | Epsilon: 0.")
 
     def read_model(self, filename):
         with open(filename, "rb") as f:
@@ -160,23 +185,39 @@ class QLearningDQN():
         with open(filename, "wb") as f:
             pickle.dump(self.q_net, f)
 
-    def save_results(self):
+    def save_results(self, experiment_name=None, type_result='train'):
+        """
+        Save results as json
+        :param experiment_name:
+        :param type_result:
+        :return:
+        """
         now = datetime.datetime.now()
         time_string = now.strftime("%Y%m%d_%H%M%S")
-        experiment_filename = f"results/gamma_{self.gamma:.2f}_eps_perc_{self.epsilon_percentage:.2f}_net_{self.hidden_layer_sizes}_{time_string}.json"
+        experiment_filename = f"results/{type_result}/{time_string}.json"
         experiment_data = {
+            'experiment_name': experiment_name,
+            'time_string': time_string,
             "experiment_filename": experiment_filename,
-            "params": {"gamma": 0.99, "hidden_layers": self.hidden_layer_sizes,
-                       "epsilon_percentage": self.epsilon_percentage},
-            "episodes": list(range(len(self.results))),
-            "rewards": [r[0] for r in self.results],
-            "avg_rewards": [r[1] for r in self.results],
-            "100*epsilon": [r[2] for r in self.results]
+            "params": {'gamma': self.gamma,
+                       'hidden_layers': self.hidden_layer_sizes,
+                       'epsilon_max': self.epsilon_max,
+                       'epsilon_min': self.epsilon_min,
+                       'epsilon_percentage': self.epsilon_percentage},
+            "episodes": [r[0] for r in self.results],
+            "rewards": [r[1] for r in self.results],
+            #"avg_rewards": [r[1] for r in self.results],
+            "100*epsilon": [r[2] for r in self.results],
+            "global_mean_reward": np.mean([r[1] for r in self.results]),
+            "global_mean_variance": np.std([r[1] for r in self.results])
         }
         # Ensure directory exists before writing
-        os.makedirs("results", exist_ok=True)
+        os.makedirs(f"results/{type_result}", exist_ok=True)
         with open(experiment_filename, "w") as f:
             json.dump(experiment_data, f)
+
+    def reset_results(self):
+        self.results = []
 
 # Replay Buffer
 class ReplayBuffer:

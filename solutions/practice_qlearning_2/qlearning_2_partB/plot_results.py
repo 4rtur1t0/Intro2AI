@@ -1,61 +1,117 @@
 import plotly.graph_objects as go
-import json
+from plotly.subplots import make_subplots
 import glob
+import json
 
-def build_results_html():
-    # Create an interactive figure
-    fig = go.Figure()
+def build_results_table(fig, type_result):
+    runs = []
+    time_strings = []
+    gammas = []
+    epsilon_mins = []
+    epsilon_maxs = []
+    epsilon_percentages = []
+    hidden_layers = []
+    total_episodes = []
+    global_mean_rewards = []
+    global_mean_variances = []
+    file_paths = sorted(glob.glob(f"results/{type_result}/*.json"))
+    for file in file_paths:
+        with open(file, "r") as f:
+            data = json.load(f)
+        runs.append(data['experiment_name'] )
+        time_strings.append(data['time_string'])
+        gammas.append(data['params']['gamma'])
+        epsilon_mins.append(data['params']['epsilon_min'])
+        epsilon_maxs.append(data['params']['epsilon_max'])
+        epsilon_percentages.append(data['params']['epsilon_percentage'])
+        hidden_layers.append(data['params']['hidden_layers'])
+        total_episodes.append(data['episodes'][-1])
+        global_mean_rewards.append(data['global_mean_reward'])
+        global_mean_variances.append(data['global_mean_variance'])
+
+    # Add the Table to the first row
+    fig.add_trace(
+        go.Table(
+            header=dict(
+                values=["<b>Run ID</b>",
+                        "<b>Time string</b>",
+                        "<b>Gamma</b>",
+                        "<b>Epsilon max</b>",
+                        "<b>Epsilon min</b>",
+                        "<b>Epsilon percentage</b>",
+                        "<b>Hidden layers</b>",
+                        "<b>Total episodes</b>",
+                        "<b>Global mean reward</b>",
+                        "<b>Global mean variance</b>"],
+                fill_color='paleturquoise',
+                align='left'
+            ),
+            cells=dict(
+                values=[runs, time_strings, gammas, epsilon_maxs,
+                        epsilon_mins, epsilon_percentages,
+                        hidden_layers, total_episodes, global_mean_rewards, global_mean_variances],
+                fill_color='lavender',
+                align='left'
+            )
+        ),
+        row=1, col=1
+    )
+
+
+def build_results_graph(fig, type_result):
+    file_paths = sorted(glob.glob(f"results/{type_result}/*.json"))
     # Load all experiment JSON files in directory
-    for file in glob.glob("results/*.json"):
+    for file in file_paths:
         with open(file, "r") as f:
             data = json.load(f)
 
         # Add a curve for the 50-episode moving average reward
         fig.add_trace(go.Scatter(
             x=data["episodes"],
-            y=data["avg_rewards"],
+            y=data["rewards"],
             mode='lines',
-            name=data["experiment_filename"],
-            hovertemplate="Episode %{x}<br>Avg Reward: %{y:.2f}"
+            name=data["experiment_name"] + ' ' + data['time_string'],
+            hovertemplate="Episode %{x}<br> Reward: %{y:.2f}"
         ))
-
-        # Format the text using HTML tags supported by Plotly
-        #info_text = (f"<b>Experiment Data:</b><br>Gamma: {data['params']['gamma']}<br>Epsilon percentage: {data['params']['epsilon_percentage']}")
-        #info_text = (f"<b>Experiment Data:</b><br>Gamma: {data['params']['gamma']}")
-        info_text = (f"<b>Experiment Data:</b><br>Gamma: {data['params']['gamma']}<br>Epsilon percentage: {data['params']['epsilon_percentage']}")
-
-        # Add the text box to the side of the plot
-        fig.add_annotation(
-            text=info_text,
-            align='left',
-            showarrow=False,
-            xref='paper', yref='paper',
-            x=0.85, y=0.5,  # Adjust these coordinates to place it outside the plot area
-            bordercolor='black',
-            borderwidth=1,
-            borderpad=10,
-            bgcolor="white"
-        )
-
-        # Make room on the right side for the text box
-        fig.update_layout(margin=dict(r=150))
-
-    # Customize interactive layout
+        # in case one needs to add the total reward at each episode
+        # fig.add_trace(go.Scatter(
+        #     x=data["episodes"],
+        #     y=data["rewards"],
+        #     mode='lines',
+        #     name=data["experiment_name"] + ' ' + data['time_string'],
+        #     hovertemplate="Episode %{x}<br> Reward: %{y:.2f}"
+        # ))
+    # Adjust size and axis titles in update_layout
     fig.update_layout(
-        title="Lunar Lander DQN Hyperparameter Comparison",
-        xaxis_title="Episode",
-        yaxis_title="Average Reward (Last 50)",
-        hovermode="x unified",
-        legend=dict(
-            title="Click to Toggle Runs:",
-            itemclick="toggle",      # Single click turns line on/off
-            itemdoubleclick="toggleothers" # Double click isolates line
-        )
+        title=f"{type_result} reward over time (TRAIN: inline test. TEST: total reward at each episode)",
+        # Set Axis Titles
+        xaxis_title="Episodes",
+        yaxis_title="Reward",
+        # Make the graph bigger (dimensions in pixels)
+        width=2000,
+        height=1200,
+        # Optional: Increase font sizes for better readability on larger charts
+        font=dict(size=14)
     )
-    # Show inside Jupyter or open in browser
+
+def build_results_html(type_result):
+    fig = make_subplots(
+        rows=2, cols=1,
+        vertical_spacing=0.01,  # Reduced spacing between rows (3% instead of 10%)
+        row_heights=[0.2, 0.8],  # 20% of vertical height for table, 80% for graph
+        specs=[[{"type": "table"}],
+               [{"type": "scatter"}]]
+    )
+    # add a table with the hyper parameters
+    build_results_table(fig, type_result)
+    # add the graphs
+    build_results_graph(fig, type_result)
+    fig.write_html(f"results/lunar_lander_DQN_experiments_{type_result}.html")
     fig.show()
-    # Optional: Save as an interactive HTML webpage
-    fig.write_html("lunar_lander_experiments.html")
+
 
 if __name__ == "__main__":
-    build_results_html()
+    type_result='train'
+    build_results_html(type_result=type_result)
+    type_result='test'
+    build_results_html(type_result=type_result)

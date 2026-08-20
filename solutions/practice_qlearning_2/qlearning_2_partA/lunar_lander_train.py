@@ -20,12 +20,13 @@ def train_qlearning():
         environment = gym.make("LunarLander-v3")
     except Exception:
         environment = gym.make("LunarLander-v2")
-    qlearning = QLearningD(environment=environment)
+    params = {'gamma': 1.0,
+              'alpha': 0.1,
+              'epsilon_percentage': 0.1}
+    qlearning = QLearningD(environment=environment, params=params)
     #qlearning.read_q_table(filename='qtable_lunar_lander.pkl')
     print('LET US LEARN NOW!')
-    qlearning.gamma = 1.0
-    qlearning.alpha = 0.1
-    qlearning.train(total_episodes=150000)
+    qlearning.train(total_episodes=1500)
     qlearning.save_q_table(filename='qtable_lunar_lander.pkl')
     qlearning.save_results()
     plot_results(qlearning)
