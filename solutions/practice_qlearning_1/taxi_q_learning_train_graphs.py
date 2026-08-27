@@ -1,3 +1,6 @@
+"""
+    Se desea
+"""
 import numpy as np
 from qlearning.qlearning import QLearning
 import gymnasium as gym
@@ -17,14 +20,16 @@ def train_qlearning():
         for gamma in gammas:
             print('Training on alpha: {}, gamma: {}'.format(alpha, gamma))
             # Caution, restart the object so that the Q table and results are reset
-            qlearning = QLearning(environment=environment)
-            qlearning.learning_rate = alpha
-            qlearning.discount_rate = gamma
-            qlearning.train(total_episodes=1500)
-            total_results.append(qlearning.results)
+            params = {'alpha': alpha, 'gamma': gamma}
+            qlearning = QLearning(environment=environment, params=params)
+            # devuelve el resultado de los inline tests
+            results = qlearning.train(total_episodes=1500)
+            #results = qlearning.test(total_episodes=10)
+            # se guardan en una lista
+            total_results.append(results)
             legends.append('(alpha, gamma)=({}_{})'.format(alpha, gamma))
     total_results = np.array(total_results)
-
+    # ploteamos los resultados
     plt.figure()
     for k in range(len(alphas)*len(gammas)):
             plt.plot(range(len(total_results[k])), total_results[k], label=legends[k], linewidth=4)

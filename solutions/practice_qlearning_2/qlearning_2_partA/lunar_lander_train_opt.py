@@ -2,28 +2,36 @@
 Se desea hacer una imagen con el resultado sobre test al entrenar con diferentes alphas y gammas.
 """
 import numpy as np
-from qlearning.qlearning import QLearning
+from qlearning_discrete.qlearning_discrete import QLearningD
 import gymnasium as gym
 import matplotlib.pyplot as plt
+from tqdm import tqdm
 
 def train_qlearning():
     try:
-        environment = gym.make('Taxi-v3')
-    except:
-        environment = gym.make('Taxi-v4')
-    total_episodes_train = 5000
-    total_episodes_test = 500
-    alphas = np.linspace(0.05, 1.0, 5)  # alpha
-    gammas = np.linspace(0.05, 1.0, 5)  # gamma
+        environment = gym.make("LunarLander-v3")
+    except Exception:
+        environment = gym.make("LunarLander-v2")
+    total_episodes_train = 10000
+    total_episodes_test = 2000
+    repetitions = 5
+    alphas = np.linspace(0.05, 1.0, 6)  # alpha
+    gammas = np.linspace(0.05, 1.0, 6)  # gamma
     print('LET US LEARN NOW!')
     total_results = np.zeros((len(alphas), len(gammas)))
+    pbar = tqdm(total=repetitions*len(alphas)*len(gammas), desc='Optimización discretized Q learning', colour='green')
     for i in range(len(alphas)):
         for j in range(len(gammas)):
-            # Caution, restart the object so that the Q table and results are reset
-            params = {'alpha': alphas[i], 'gamma': gammas[j]}
-            qlearning = QLearning(environment=environment, params=params)
-            qlearning.train(total_episodes=total_episodes_train)
-            results = qlearning.test(total_episodes=total_episodes_test)
+            results = []
+            for k in range(repetitions):
+                pbar.update(1)
+                # Caution, restart the object so that the Q table and results are reset
+                # en este caso, no deseamos hacer tests inline
+                params = {'alpha': alphas[i], 'gamma': gammas[j], 'training_tests': (1000, 0)}
+                qlearning = QLearningD(environment=environment, params=params)
+                qlearning.train(total_episodes=total_episodes_train)
+                res = qlearning.test(total_episodes=total_episodes_test)
+                results.append(res)
             total_results[i][j]=np.mean(results)
     fig, ax = plt.subplots()
     im = ax.imshow(total_results)

@@ -4,15 +4,14 @@
     Es poden resoldre diferents escenes d'aprenentatge amb aquest mateix disseny.
 """
 import numpy as np
-import random
+#import random
 import time
 from collections import defaultdict
 import pickle
 import os
 import json
 import datetime
-
-from libAI.epsilon_greedy import EpsilonGreedy
+from libAI.epsilon_greedy import EpsilonGreedyGeom
 
 # Non-uniform bin boundaries: tighter resolution around 0 for fine control
 X_BINS = np.array([-0.4, -0.15, -0.05, 0.05, 0.15, 0.4])
@@ -39,15 +38,16 @@ class QLearningD():
         self.epsilon_max = params.get('epsilon_max', 1.0)
         self.epsilon_min = params.get('epsilon_min', 0.01)
         self.epsilon_percentage = params.get('epsilon_percentage', 0.2)  # ratio de episodios para llegar a epsilon_min
-        #self.epsilon = self.epsilon_max
+        self.training_tests = params.get('training_tests', (50, 10))
         self.avg_window = 100 # una ventana para hacer la media móvil del resultado
         # para guardar resultados
         self.results = []
 
     def train(self, total_episodes):
-        epsilon_greedy = EpsilonGreedy(epsilon_max=self.epsilon_max, epsilon_min=self.epsilon_min,
-                                       total_episodes=total_episodes, percentage_target=self.epsilon_percentage)
+        epsilon_greedy = EpsilonGreedyGeom(epsilon_max=self.epsilon_max, epsilon_min=self.epsilon_min,
+                                           total_episodes=total_episodes, percentage_target=self.epsilon_percentage)
         self.results = []
+        results = []
         recent_rewards = []
         print("Training started!\n\n")
         # Training loop
@@ -58,7 +58,7 @@ class QLearningD():
             total_reward = 0
             while True:
                 # Epsilon-greedy action selection
-                if epsilon_greedy.random_action(): #.uniform(0, 1) < self.epsilon:
+                if epsilon_greedy.random_action():
                     action = self.env.action_space.sample()  # Explore
                 else:
                     action = np.argmax(self.q_table[state_d])  # Exploit
@@ -75,15 +75,17 @@ class QLearningD():
                 state_d = next_state_d
             # Reduce epsilon (less exploration, more exploitation as time goes on)
             epsilon_greedy.step()
+            res = self.inline_test(episode, epsilon_greedy)
+            if res is not None: results.append(res)
             recent_rewards.append(total_reward)
             avg_reward = np.mean(recent_rewards[-self.avg_window:])
-            self.results.append([total_reward, avg_reward, 100 * epsilon_greedy.epsilon, len(self.q_table)/1000])
+            #self.results.append([total_reward, avg_reward, 100 * epsilon_greedy.epsilon, len(self.q_table)/1000])
             print(f"Episode {episode:4d} | Reward: {total_reward:6.1f} | Avg (last 100): {avg_reward:6.1f} | Epsilon: {epsilon_greedy.epsilon:.2f}",
                   end="\r", flush=True)
             if episode % self.avg_window == 0:
                 print()
-            self.env.close()
-        return self.q_table
+            #self.env.close()
+        return results
 
     def update_q_table(self, state_d, action, next_state_d, reward, done):
         if not done:
@@ -97,9 +99,9 @@ class QLearningD():
             self.q_table[state_d][action] = (self.q_table[state_d][action] +\
                                              self.alpha * (reward - self.q_table[state_d][action]))
 
-    def test(self, total_episodes):
-        print('Testing Discretized Q-learning')
-        self.results = []
+    def test(self, total_episodes, save_results = False):
+        #print('Testing Discretized Q-learning')
+        #self.results = []
         recent_rewards = []
         for episode in range(total_episodes):
             #print("Episode: ", episode)
@@ -116,20 +118,32 @@ class QLearningD():
                 if self.env.render_mode == 'human':
                     time.sleep(.1)
                 if terminated or truncated:
-                    #self.results.append(srt)
-                    #print('Total reward of episode:', srt)
                     break
                 # Move to the next state
                 state_d = next_state_d
             recent_rewards.append(total_reward)
-            avg_reward = np.mean(recent_rewards[-self.avg_window:])
-            self.results.append([total_reward, avg_reward, 0])
-            print(f"TEST Episode {episode:4d} | Total reward: {total_reward:6.1f} | Avg (100): {avg_reward:6.1f}",
+            # avg_reward = np.mean(self.recent_rewards[-self.avg_window:])
+            if save_results:
+                self.results.append([episode, total_reward, 0])
+            #avg_reward = np.mean(recent_rewards[-self.avg_window:])
+            #self.results.append([total_reward, avg_reward, 0])
+            print(f"TEST Episode {episode:4d} | Total reward: {total_reward:6.1f}",
                 end="\r")
-            if episode % 10 == 0:
+            if episode % 50 == 0:
                 print()
-        print("Test finished!")
-        self.env.close()
+        #print("Test finished!")
+        #self.env.close()
+        return recent_rewards
+
+    def inline_test(self, episode, epsilon_greedy):
+        # inline test
+        if episode % self.training_tests[0] == 0:
+            test_train_results = self.test(total_episodes=self.training_tests[1])
+            test_train_results = np.mean(test_train_results)
+            self.results.append([episode, test_train_results, 100 * epsilon_greedy.epsilon])
+            print(f"INLINE TEST {episode:4d} | Avg reward ({self.training_tests[1]}): {test_train_results:6.1f} | Epsilon: 0.")
+            return test_train_results
+        return None
 
     def create_random_q_table(self):
         """
@@ -162,7 +176,36 @@ class QLearningD():
             int(leg2),
         )
 
-    def save_results(self, experiment_name='train', type_result='train'):
+    # def save_results(self, experiment_name='train', type_result='train'):
+    #     now = datetime.datetime.now()
+    #     time_string = now.strftime("%Y%m%d_%H%M%S")
+    #     experiment_filename = f"results/{type_result}/{time_string}.json"
+    #     experiment_data = {
+    #         'experiment_name': experiment_name,
+    #         'time_string': time_string,
+    #         "experiment_filename": experiment_filename,
+    #         "params": {'gamma': self.gamma,
+    #                    'epsilon_max': self.epsilon_max,
+    #                    'epsilon_min': self.epsilon_min,
+    #                    'epsilon_percentage': self.epsilon_percentage},
+    #         "episodes": list(range(len(self.results))),
+    #         "rewards": [r[0] for r in self.results],
+    #         "avg_rewards": [r[1] for r in self.results],
+    #         "100*epsilon": [r[2] for r in self.results],
+    #         "global_mean_reward": np.mean([r[0] for r in self.results])
+    #     }
+    #     # Ensure directory exists before writing
+    #     os.makedirs(f"results/{type_result}", exist_ok=True)
+    #     with open(experiment_filename, "w") as f:
+    #         json.dump(experiment_data, f)
+
+    def save_results(self, experiment_name=None, type_result='train'):
+        """
+        Save results as json
+        :param experiment_name:
+        :param type_result:
+        :return:
+        """
         now = datetime.datetime.now()
         time_string = now.strftime("%Y%m%d_%H%M%S")
         experiment_filename = f"results/{type_result}/{time_string}.json"
@@ -170,15 +213,18 @@ class QLearningD():
             'experiment_name': experiment_name,
             'time_string': time_string,
             "experiment_filename": experiment_filename,
-            "params": {'gamma': self.gamma,
+            "params": { 'alpha': self.alpha,
+                        'gamma': self.gamma,
+                       #'hidden_layers': self.hidden_layer_sizes,
                        'epsilon_max': self.epsilon_max,
                        'epsilon_min': self.epsilon_min,
                        'epsilon_percentage': self.epsilon_percentage},
-            "episodes": list(range(len(self.results))),
-            "rewards": [r[0] for r in self.results],
-            "avg_rewards": [r[1] for r in self.results],
+            "episodes": [r[0] for r in self.results],
+            "rewards": [r[1] for r in self.results],
+            #"avg_rewards": [r[1] for r in self.results],
             "100*epsilon": [r[2] for r in self.results],
-            "global_mean_reward": np.mean([r[0] for r in self.results])
+            "global_mean_reward": np.mean([r[1] for r in self.results]),
+            "global_mean_variance": np.std([r[1] for r in self.results])
         }
         # Ensure directory exists before writing
         os.makedirs(f"results/{type_result}", exist_ok=True)

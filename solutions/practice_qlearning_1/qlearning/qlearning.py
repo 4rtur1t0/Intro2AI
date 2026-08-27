@@ -3,57 +3,49 @@
     Es poden resoldre diferents escenes d'aprenentatge amb aquest mateix disseny.
 """
 import numpy as np
-import random
+#import random
 import time
 from tqdm import tqdm
-
-from libAI.epsilon_greedy import EpsilonGreedy
+from libAI.epsilon_greedy import EpsilonGreedy, EpsilonGreedyGeom
 
 
 class QLearning():
-    def __init__(self, environment):
+    def __init__(self, environment, params={}):
         self.env = environment
-        # Initialize Q-table with zeros (500 states x 6 actions)
         self.state_size = self.env.observation_space.n
         self.action_size = self.env.action_space.n
         # importante, la tabla Q se inicializa a ceros por defecto
-        # se puede cargar desde un fichero con el método load_q_table
-        # se puede guardar con el método save_q_table
         self.q_table = np.zeros((self.state_size, self.action_size))
         # Hyperparameters
-        self.learning_rate = 1.0  # alpha
-        self.discount_rate = 1.0  # gamma
-        self.epsilon = 1.0  # Exploration rate
-        self.epsilon_max = 1.0
-        self.epsilon_min = 0.01
-        self.percentage_target = 0.25  # Exponential decay rate for exploration
+        self.learning_rate = params.get('alpha', 1.0)  # alpha
+        self.discount_rate = params.get('gamma', 1.0)  # gamma
+        self.epsilon_max = params.get('epsilon_max', 1.0)
+        self.epsilon_min = params.get('epsilon_min', 0.01)
+        self.percentage_target = params.get('percentage_target', 0.25)  # Exponential decay rate for exploration
+        self.avg_window = 50
         # para guardar resultados
         self.results = []
-        # during training, test each testing_episodes
-        self.testing_episodes = 10
+        # online training tests during training, test each 50 episodes, run 10 episodes of test
+        self.training_tests = (10, 10)
 
     def train(self, total_episodes):
         self.results = []
+        train_results = []
         print('Training started!', flush=True)
         pbar = tqdm(total=total_episodes, desc= 'Episodios', colour='green')
-        epsilon_greedy = EpsilonGreedy(epsilon_max=self.epsilon_max,
+        epsilon_greedy = EpsilonGreedyGeom(epsilon_max=self.epsilon_max,
                                        epsilon_min=self.epsilon_min,
                                        total_episodes=total_episodes,
                                        percentage_target=self.percentage_target)
         recent_rewards = []
         # Training loop
         for episode in range(total_episodes):
-            # print("Episode: ", episode)
             state, info = self.env.reset()
             # sum of rewards for each episode
             total_reward = 0
-            if episode % self.testing_episodes == 0:
-                random_action = False
-            else:
-                random_action = True
             while True:
                 # Epsilon-greedy action selection
-                if  epsilon_greedy.random_action():
+                if epsilon_greedy.random_action():
                     action = self.env.action_space.sample()  # Explore
                 else:
                     action = np.argmax(self.q_table[state])  # Exploit
@@ -63,26 +55,23 @@ class QLearning():
                 # Actualiza la tabla Q
                 self.update_q_table(state, action, next_state, reward)
                 if terminated or truncated:
-                    #if not random_action:
-                    #    self.results.append(srt)
                     break
-                # Move to next state
+                # Move to the next state
                 state = next_state
             pbar.update(1)
             # Reduce epsilon
             epsilon_greedy.step()
             # test online en algunos casos
-            self.inline_test(episode, epsilon_greedy)
+            res = self.inline_test(episode, epsilon_greedy)
+            if res is not None: train_results.append(res)
             recent_rewards.append(total_reward)
             avg_reward = np.mean(recent_rewards[-self.avg_window:])
             print(f"TRAIN Episode {episode:4d} | Total reward: {total_reward:6.1f} | Avg (100): {avg_reward:6.1f} | Epsilon: {epsilon_greedy.epsilon:.2f}",
                 end="\r", flush=True)
             if episode % 20 == 0:
                 print()
-        print()
         print("Training finished! Your Q-table is optimized.")
-        self.env.close()
-        return self.q_table
+        return train_results
 
 
     def update_q_table(self, state, action, next_state, reward):
@@ -92,28 +81,32 @@ class QLearning():
                                                     reward + self.discount_rate * np.max(self.q_table[next_state]) -
                                                     self.q_table[state, action]))
 
-    def test(self, total_episodes):
-        print('Test started')
+    def test(self, total_episodes, save_results=False):
+        #print('Test started')
+        recent_rewards = []
         # test loop
         for episode in range(total_episodes):
-            print("Episode: ", episode)
             state, info = self.env.reset()
-            srt = 0
+            total_reward = 0
             while True:
                 # Greedy action selection
                 action = np.argmax(self.q_table[state])  # Exploit
                 # Take action, observe new state and reward
                 next_state, reward, terminated, truncated, info = self.env.step(action)
-                srt += reward
-                time.sleep(.1)
+                total_reward += reward
+                if self.env.render_mode == 'human':
+                    time.sleep(.1)
                 if terminated or truncated:
-                    self.results.append(srt)
-                    # self.results.save_data(sum_rewards_per_episodei=srt)
                     break
                 # Move to the next state
                 state = next_state
-        print("Test finished!")
-        self.env.close()
+            recent_rewards.append(total_reward)
+            if save_results:
+                self.results.append([episode, total_reward, 0])
+            print(f"Episode {episode:4d} | Total reward: {total_reward:6.1f}", end='\r')
+            if episode % 10 == 0:
+                print()
+        return recent_rewards
 
     def inline_test(self, episode, epsilon_greedy):
         # inline test
@@ -122,7 +115,8 @@ class QLearning():
             test_train_results = np.mean(test_train_results)
             self.results.append([episode, test_train_results, 100 * epsilon_greedy.epsilon])
             print(f"INLINE TEST {episode:4d} | Avg reward ({self.training_tests[1]}): {test_train_results:6.1f} | Epsilon: 0.")
-
+            return test_train_results
+        return None
 
     def create_random_q_table(self):
         self.q_table = np.random.rand(self.state_size, self.action_size)

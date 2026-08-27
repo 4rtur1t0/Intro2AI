@@ -10,6 +10,7 @@ def test_deep_qlearning():
     qlearning.read_model(filename='mlpregressor_qtable_lunar_lander.pkl')
     print('LET US SEE WHAT WAS LEARNT NOW!')
     qlearning.test(total_episodes=20)
+    
 
 if __name__ == "__main__":
     test_deep_qlearning()

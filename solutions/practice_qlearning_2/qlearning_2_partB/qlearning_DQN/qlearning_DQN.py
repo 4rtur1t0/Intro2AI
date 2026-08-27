@@ -12,14 +12,14 @@ import copy
 import json
 import os
 import datetime
-from libAI.epsilon_greedy import EpsilonGreedy
+from libAI.epsilon_greedy import EpsilonGreedyGeom
 
 
 class QLearningDQN():
     def __init__(self, environment, params={}):
         self.env = environment
         # Hyperparameters
-        self.batch_size = 64
+        self.batch_size = params.get('batch_size', 64)
         self.gamma = params.get('gamma', 1.0)
         self.epsilon_max = params.get('epsilon_max', 1.0)
         self.epsilon_min = params.get('epsilon_min', 0.01)
@@ -28,7 +28,7 @@ class QLearningDQN():
         # Each 50 episodes of training, test 10 times without updating your knowledge
         self.training_tests = params.get('training_tests', (50, 10))
         #self.epsilon = self.epsilon_max
-        self.target_update_freq = 250  # Steps between target network syncs
+        self.target_update_freq = params.get('target_update_freq', 250)  # Steps between target network syncs
         self.hidden_layer_sizes = params.get('hidden_layer_sizes', (64, 64))
         # Initialize Neural Networks. Se usa un MLPRgressor de Scikit-Learn para aproximar Q
         self.q_net = MLPRegressor(
@@ -36,8 +36,7 @@ class QLearningDQN():
             activation="relu",
             solver="adam",
             learning_rate_init=0.0005,
-            max_iter=1,
-        )
+            max_iter=1)
         state_dim = self.env.observation_space.shape[0]
         action_dim = self.env.action_space.n
         # Run a single dummy partial_fit to initialize network weights and dimensions
@@ -47,14 +46,13 @@ class QLearningDQN():
         # Create Target Network via deepcopy
         self.target_net = copy.deepcopy(self.q_net)
         # El buffer para guardar el mini-batch
-        self.replay_buffer = ReplayBuffer(capacity=50000)
+        self.replay_buffer = ReplayBuffer(capacity=params.get('replay_buffer_size', 50000))
         # para guardar resultados
-        #self.recent_rewards = []
         self.results = []
         self.avg_window = 100
 
     def train(self, total_episodes):
-        epsilon_greedy = EpsilonGreedy(total_episodes=total_episodes,
+        epsilon_greedy = EpsilonGreedyGeom(total_episodes=total_episodes,
                                        epsilon_max=self.epsilon_max, epsilon_min=self.epsilon_min,
                                        percentage_target=self.epsilon_percentage)
         total_steps = 0
@@ -138,9 +136,7 @@ class QLearningDQN():
 
     def test(self, total_episodes, save_results=False):
         recent_rewards = []
-        #self.results = []
         for episode in range(total_episodes):
-            #print("Episode: ", episode)
             state, info = self.env.reset()
             total_reward = 0
             while True:

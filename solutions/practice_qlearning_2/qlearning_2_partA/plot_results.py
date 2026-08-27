@@ -104,7 +104,7 @@ def build_results_html(type_result):
     build_results_table(fig, type_result)
     # add the graphs
     build_results_graph(fig, type_result)
-    fig.write_html(f"results/lunar_lander_DQN_experiments_{type_result}.html")
+    fig.write_html(f"results/lunar_lander_discrete_experiments_{type_result}.html")
     fig.show()
 
 

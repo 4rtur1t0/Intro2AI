@@ -7,7 +7,7 @@ def test_qlearning():
     #qlearning.create_random_q_table()
     qlearning.read_q_table(filename='qtable_cliff.npy')
     print('Testing mode!')
-    qlearning.test(total_episodes=1)
+    qlearning.test(total_episodes=10)
 
 if __name__ == "__main__":
     test_qlearning()
