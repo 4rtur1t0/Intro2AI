@@ -105,7 +105,7 @@ def train_deep_qlearning():
             #total_episodes = experiment['total_episodes']
             # TRAIN!
             qlearning.train(total_episodes=total_episodes_train)
-            #qlearning.save_model(filename='mlpregressor_qtable_lunar_lander.pkl')
+            #qlearning.save_model(filename='q_learning_DQN_lunar_lander.pkl')
             qlearning.save_results(experiment_name=experiment['exp_name'],
                                    type_result='train')
             qlearning.reset_results()

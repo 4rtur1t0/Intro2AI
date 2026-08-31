@@ -18,16 +18,18 @@ def build_results_table(fig, type_result):
     for file in file_paths:
         with open(file, "r") as f:
             data = json.load(f)
+
         runs.append(data['experiment_name'] )
         time_strings.append(data['time_string'])
-        gammas.append(data['params']['gamma'])
-        epsilon_mins.append(data['params']['epsilon_min'])
-        epsilon_maxs.append(data['params']['epsilon_max'])
-        epsilon_percentages.append(data['params']['epsilon_percentage'])
-        hidden_layers.append(data['params']['hidden_layers'])
         total_episodes.append(data['episodes'][-1])
         global_mean_rewards.append(data['global_mean_reward'])
         global_mean_variances.append(data['global_mean_variance'])
+        if type_result == 'train':
+            gammas.append(data['params']['gamma'])
+            epsilon_mins.append(data['params']['epsilon_min'])
+            epsilon_maxs.append(data['params']['epsilon_max'])
+            epsilon_percentages.append(data['params']['epsilon_percentage'])
+            hidden_layers.append(data['params']['hidden_layer_sizes'])
 
     # Add the Table to the first row
     fig.add_trace(

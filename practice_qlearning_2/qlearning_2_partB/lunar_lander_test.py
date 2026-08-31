@@ -7,7 +7,7 @@ def test_deep_qlearning():
     except Exception:
         environment = gym.make("LunarLander-v2", render_mode='human')
     qlearning = QLearningDQN(environment=environment)
-    qlearning.read_model(filename='mlpregressor_qtable_lunar_lander.pkl')
+    qlearning.read_model(filename='q_learning_DQN_lunar_lander.pkl')
     print('LET US SEE WHAT WAS LEARNT NOW!')
     qlearning.test(total_episodes=20)
     

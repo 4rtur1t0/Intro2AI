@@ -27,9 +27,9 @@ def train_deep_qlearning():
               'training_tests': (50, 50)}
     qlearning = QLearningDQN(environment=environment, params=params)
     # podemos leer el último modelo guardado para seguir entrenando sobre él
-    #qlearning.read_model(filename='mlpregressor_qtable_lunar_lander.pkl')
+    #qlearning.read_model(filename='q_learning_DQN_lunar_lander.pkl')
     qlearning.train(total_episodes=total_episodes_train)
-    qlearning.save_model(filename='mlpregressor_qtable_lunar_lander.pkl')
+    qlearning.save_model(filename='q_learning_DQN_lunar_lander.pkl')
     qlearning.save_results(experiment_name=str(params), type_result='train')
     plot_results(qlearning)
 

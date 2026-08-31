@@ -13,6 +13,7 @@ import json
 import os
 import datetime
 from libAI.epsilon_greedy import EpsilonGreedyGeom
+from libAI.results import Results
 
 
 class QLearningDQN():
@@ -20,7 +21,7 @@ class QLearningDQN():
         self.env = environment
         # Hyperparameters
         self.batch_size = params.get('batch_size', 64)
-        self.gamma = params.get('gamma', 1.0)
+        self.gamma = params.get('gamma', 0.99)
         self.epsilon_max = params.get('epsilon_max', 1.0)
         self.epsilon_min = params.get('epsilon_min', 0.01)
         #self.epsilon_step = None  # computed later
@@ -51,13 +52,13 @@ class QLearningDQN():
         self.avg_window = 100
 
     def train(self, total_episodes):
+        results_out = Results(type_result='train', params=vars(self))
+        results_running = Results(type_result='train')
         epsilon_greedy = EpsilonGreedyGeom(total_episodes=total_episodes,
                                            epsilon_max=self.epsilon_max,
                                            epsilon_min=self.epsilon_min,
                                            percentage_target=self.epsilon_percentage)
         total_steps = 0
-        recent_rewards = []
-        self.results = []
         print("Training DQN with Scikit-Learn MLPRegressor...")
         for episode in range(total_episodes):
             state, _ = self.env.reset()
@@ -79,16 +80,11 @@ class QLearningDQN():
                 self.train_networks(total_steps=total_steps)
             # reducimos epsilon
             epsilon_greedy.step()
-            self.inline_test(episode, epsilon_greedy)
-            recent_rewards.append(total_reward)
-            avg_reward = np.mean(recent_rewards[-self.avg_window:])
-            # self.results.append([total_reward, avg_reward, 100*epsilon_greedy.epsilon])
-            print(f"TRAIN Episode {episode:4d} | Total reward: {total_reward:6.1f} | Avg (100): {avg_reward:6.1f} | Epsilon: {epsilon_greedy.epsilon:.2f}",
-                   end="\r", flush=True)
-            if episode % 1 == 0:
-                 print()
-        #self.env.close()
-        return self.q_net
+            res = self.inline_test(episode)
+            if res is not None: results_out.append_data(episode=episode, total_reward=res[1], epsilon=100*epsilon_greedy.epsilon)
+            results_running.append_data(episode=episode, total_reward=total_reward, epsilon=epsilon_greedy.epsilon)
+            results_running.print_info(flush_each=20)
+        return results_out
 
     def train_networks(self, total_steps):
         """
@@ -134,8 +130,8 @@ class QLearningDQN():
             action = np.argmax(q_values)
         return action
 
-    def test(self, total_episodes, save_results=False):
-        recent_rewards = []
+    def test(self, total_episodes, print_info=True):
+        results = Results(type_result='test')
         for episode in range(total_episodes):
             state, info = self.env.reset()
             total_reward = 0
@@ -153,22 +149,20 @@ class QLearningDQN():
                     break
                 # Move to the next state
                 state = next_state
-            recent_rewards.append(total_reward)
-            #avg_reward = np.mean(self.recent_rewards[-self.avg_window:])
-            if save_results:
-                self.results.append([episode, total_reward, 0])
-            print(f"Episode {episode:4d} | Total reward: {total_reward:6.1f}", end='\r')
-            if episode % 10 == 0:
-                print()
-        return recent_rewards
+            results.append_data(episode, total_reward, 0.0)
+            if print_info:
+                results.print_info(prelude='TEST', avg_window=1, flush_each=1)
+        return results
 
-    def inline_test(self, episode, epsilon_greedy):
+    def inline_test(self, episode):
         # inline test
         if episode % self.training_tests[0] == 0:
-            test_train_results = self.test(total_episodes=self.training_tests[1])
-            test_train_results = np.mean(test_train_results)
-            self.results.append([episode, test_train_results, 100 * epsilon_greedy.epsilon])
-            print(f"INLINE TEST {episode:4d} | Avg reward ({self.training_tests[1]}): {test_train_results:6.1f} | Epsilon: 0.")
+            test_train_results = self.test(total_episodes=self.training_tests[1], print_info=False)
+            #test_train_results.print_info(avg_window = self.training_tests[1], flush_each=self.training_tests[1])
+            mean_test_train_results = test_train_results.mean()
+            print(f"INLINE TEST {episode:4d} | Avg reward ({self.training_tests[1]}): {mean_test_train_results[1]:6.1f} | Epsilon: 0.")
+            return mean_test_train_results
+        return None
 
     def read_model(self, filename):
         with open(filename, "rb") as f:
@@ -179,44 +173,9 @@ class QLearningDQN():
         with open(filename, "wb") as f:
             pickle.dump(self.q_net, f)
 
-    def save_results(self, experiment_name=None, type_result='train'):
-        """
-        Save results as json
-        :param experiment_name:
-        :param type_result:
-        :return:
-        """
-        now = datetime.datetime.now()
-        time_string = now.strftime("%Y%m%d_%H%M%S")
-        experiment_filename = f"results/{type_result}/{time_string}.json"
-        experiment_data = {
-            'experiment_name': experiment_name,
-            'time_string': time_string,
-            "experiment_filename": experiment_filename,
-            "params": {'gamma': self.gamma,
-                       'hidden_layers': self.hidden_layer_sizes,
-                       'epsilon_max': self.epsilon_max,
-                       'epsilon_min': self.epsilon_min,
-                       'epsilon_percentage': self.epsilon_percentage},
-            "episodes": [r[0] for r in self.results],
-            "rewards": [r[1] for r in self.results],
-            #"avg_rewards": [r[1] for r in self.results],
-            "100*epsilon": [r[2] for r in self.results],
-            "global_mean_reward": np.mean([r[1] for r in self.results]),
-            "global_mean_variance": np.std([r[1] for r in self.results])
-        }
-        # Ensure directory exists before writing
-        os.makedirs(f"results/{type_result}", exist_ok=True)
-        with open(experiment_filename, "w") as f:
-            json.dump(experiment_data, f)
-
-    def reset_results(self):
-        self.results = []
-
 
 # Replay Buffer
 class ReplayBuffer:
-
     def __init__(self, capacity=50000):
         self.buffer = deque(maxlen=capacity)
 

@@ -91,8 +91,8 @@ def train_deep_qlearning():
     except Exception:
         environment = gym.make("LunarLander-v2")
     experiments = set_experiments()
-    total_episodes_train = 1000
-    total_episodes_test = 1000
+    total_episodes_train = 150
+    total_episodes_test = 10
     repetitions = 3
     pbar = tqdm(total=repetitions*len(experiments), desc='Optimización DQN', colour='green')
     for experiment in experiments:
@@ -102,21 +102,14 @@ def train_deep_qlearning():
             print(30*'#')
             print('TRAIN ' + experiment['exp_name'])
             print(30*'#')
-            #total_episodes = experiment['total_episodes']
             # TRAIN!
-            qlearning.train(total_episodes=total_episodes_train)
-            #qlearning.save_model(filename='mlpregressor_qtable_lunar_lander.pkl')
-            qlearning.save_results(experiment_name=experiment['exp_name'],
-                                   type_result='train')
-            qlearning.reset_results()
+            results = qlearning.train(total_episodes=total_episodes_train)
+            results.save(experiment_name=experiment['exp_name'])
             print(30 * '#')
             print('TEST ' + experiment['exp_name'])
             print(30 * '#')
-            qlearning.test(total_episodes=total_episodes_test, save_results=True)
-            qlearning.save_results(experiment_name=experiment['exp_name'],
-                                   type_result='test')
-            #environment.close()
-
+            results = qlearning.test(total_episodes=total_episodes_test)
+            results.save(experiment_name=experiment['exp_name'])
 
 if __name__ == "__main__":
     train_deep_qlearning()
