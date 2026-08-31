@@ -21,7 +21,7 @@ class EpsilonGreedy():
 
 
     def random_action(self):
-        if random.uniform(0, 1) < self.epsilon:
+        if random.uniform(0.0, 1.0) < self.epsilon:
             return True
         return False
 

@@ -4,36 +4,37 @@ from tqdm import tqdm
 
 
 def set_experiments():
-    experiments = [ {'exp_name': 'Miopic/visionary 1',
-                     'gamma': 0.1,
-                     'hidden_layer_sizes': (64, 64)},
-                    {'exp_name': 'Miopic/visionary 2',
-                     'gamma': 0.3,
-                     'hidden_layer_sizes': (64, 64)},
-                    {'exp_name': 'Miopic/visionary 3',
-                     'gamma': 0.5,
-                     'hidden_layer_sizes': (64, 64)},
-                    {'exp_name': 'Miopic/visionary 4 ',
-                     'gamma': 0.99,
-                     'hidden_layer_sizes': (64, 64)},
-                    {'exp_name': 'MLP size 1_(8,8) g0.99',
-                     'gamma': 0.99,
-                     'hidden_layer_sizes': (8, 8)},
-                    {'exp_name': 'MLP size 2_(64,64) g0.99',
-                     'gamma': 0.99,
-                     'hidden_layer_sizes': (64, 64)},
-                    {'exp_name': 'MLP size 3_(128,128) g0.99',
-                     'gamma': 0.99,
-                     'hidden_layer_sizes': (128, 128)},
-                    {'exp_name': 'MLP size 1_(8,8) g0.5',
-                     'gamma': 0.5,
-                     'hidden_layer_sizes': (8, 8)},
-                    {'exp_name': 'MLP size 2_(64,64) g0.5',
-                     'gamma': 0.5,
-                     'hidden_layer_sizes': (64, 64)},
-                    {'exp_name': 'MLP size 3_(128,128) g0.5',
-                     'gamma': 0.5,
-                     'hidden_layer_sizes': (128, 128)},
+    experiments = [
+    # {'exp_name': 'Miopic/visionary 1',
+    #                  'gamma': 0.1,
+    #                  'hidden_layer_sizes': (64, 64)},
+    #                 {'exp_name': 'Miopic/visionary 2',
+    #                  'gamma': 0.3,
+    #                  'hidden_layer_sizes': (64, 64)},
+    #                 {'exp_name': 'Miopic/visionary 3',
+    #                  'gamma': 0.5,
+    #                  'hidden_layer_sizes': (64, 64)},
+    #                 {'exp_name': 'Miopic/visionary 4 ',
+    #                  'gamma': 0.99,
+    #                  'hidden_layer_sizes': (64, 64)},
+    #                 {'exp_name': 'MLP size 1_(8,8) g0.99',
+    #                  'gamma': 0.99,
+    #                  'hidden_layer_sizes': (8, 8)},
+    #                 {'exp_name': 'MLP size 2_(64,64) g0.99',
+    #                  'gamma': 0.99,
+    #                  'hidden_layer_sizes': (64, 64)},
+    #                 {'exp_name': 'MLP size 3_(128,128) g0.99',
+    #                  'gamma': 0.99,
+    #                  'hidden_layer_sizes': (128, 128)},
+    #                 {'exp_name': 'MLP size 1_(8,8) g0.5',
+    #                  'gamma': 0.5,
+    #                  'hidden_layer_sizes': (8, 8)},
+    #                 {'exp_name': 'MLP size 2_(64,64) g0.5',
+    #                  'gamma': 0.5,
+    #                  'hidden_layer_sizes': (64, 64)},
+    #                 {'exp_name': 'MLP size 3_(128,128) g0.5',
+    #                  'gamma': 0.5,
+    #                  'hidden_layer_sizes': (128, 128)},
                     {'exp_name': 'Replay buffer size 1',
                     'gamma': 0.99,
                     'replay_buffer_size': 1,
@@ -75,11 +76,11 @@ def set_experiments():
                     'target_update_freq': 500,
                     'hidden_layer_sizes': (64, 64)},
                    {'exp_name': 'Target update freq 1000',
-                    'gamma': 1.0,
+                    'gamma': 0.99, # !
                     'target_update_freq': 1000,
                     'hidden_layer_sizes': (64, 64)},
-                   {'exp_name': 'Target update freq 10000',
-                    'gamma': 1.0,
+                  {'exp_name': 'Target update freq 10000',
+                    'gamma': 0.99, # !
                     'target_update_freq': 10000,
                     'hidden_layer_sizes': (64, 64)} ]
     return experiments
@@ -90,7 +91,7 @@ def train_deep_qlearning():
     except Exception:
         environment = gym.make("LunarLander-v2")
     experiments = set_experiments()
-    total_episodes_train = 5000
+    total_episodes_train = 1000
     total_episodes_test = 1000
     repetitions = 3
     pbar = tqdm(total=repetitions*len(experiments), desc='Optimización DQN', colour='green')
