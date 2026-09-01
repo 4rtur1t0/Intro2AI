@@ -1,6 +1,5 @@
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
-from datetime import datetime
 import glob
 import json
 
@@ -11,22 +10,25 @@ def build_results_table(fig, type_result):
     epsilon_mins = []
     epsilon_maxs = []
     epsilon_percentages = []
-    hidden_layers = []
+    alphas = []
     total_episodes = []
     global_mean_rewards = []
+    global_mean_variances = []
     file_paths = sorted(glob.glob(f"results/{type_result}/*.json"))
     for file in file_paths:
         with open(file, "r") as f:
             data = json.load(f)
         runs.append(data['experiment_name'] )
         time_strings.append(data['time_string'])
-        gammas.append(data['params']['gamma'])
-        epsilon_mins.append(data['params']['epsilon_min'])
-        epsilon_maxs.append(data['params']['epsilon_max'])
-        epsilon_percentages.append(data['params']['epsilon_percentage'])
-        #hidden_layers.append(data['params']['hidden_layers'])
-        total_episodes.append(len(data['episodes']))
+        total_episodes.append(data['episodes'][-1])
         global_mean_rewards.append(data['global_mean_reward'])
+        global_mean_variances.append(data['global_mean_variance'])
+        if type_result == 'train':
+            gammas.append(data['params']['gamma'])
+            epsilon_mins.append(data['params']['epsilon_min'])
+            epsilon_maxs.append(data['params']['epsilon_max'])
+            epsilon_percentages.append(data['params']['epsilon_percentage'])
+            alphas.append(data['params']['alpha'])
 
     # Add the Table to the first row
     fig.add_trace(
@@ -38,16 +40,17 @@ def build_results_table(fig, type_result):
                         "<b>Epsilon max</b>",
                         "<b>Epsilon min</b>",
                         "<b>Epsilon percentage</b>",
-                        #"<b>Hidden layers</b>",
+                        "<b>Alpha</b>",
                         "<b>Total episodes</b>",
-                        "<b>Global mean reward</b>"],
+                        "<b>Global mean reward</b>",
+                        "<b>Global mean variance</b>"],
                 fill_color='paleturquoise',
                 align='left'
             ),
             cells=dict(
                 values=[runs, time_strings, gammas, epsilon_maxs,
                         epsilon_mins, epsilon_percentages,
-                        total_episodes, global_mean_rewards],
+                        alphas, total_episodes, global_mean_rewards, global_mean_variances],
                 fill_color='lavender',
                 align='left'
             )
@@ -66,10 +69,10 @@ def build_results_graph(fig, type_result):
         # Add a curve for the 50-episode moving average reward
         fig.add_trace(go.Scatter(
             x=data["episodes"],
-            y=data["avg_rewards"],
+            y=data["rewards"],
             mode='lines',
             name=data["experiment_name"] + ' ' + data['time_string'],
-            hovertemplate="Episode %{x}<br>Avg Reward: %{y:.2f}"
+            hovertemplate="Episode %{x}<br> Reward: %{y:.2f}"
         ))
         # in case one needs to add the total reward at each episode
         # fig.add_trace(go.Scatter(
@@ -81,10 +84,10 @@ def build_results_graph(fig, type_result):
         # ))
     # Adjust size and axis titles in update_layout
     fig.update_layout(
-        title=f"Average {type_result} reward over time (Avg. window 100)",
+        title=f"{type_result} reward over time (TRAIN: inline test. TEST: total reward at each episode)",
         # Set Axis Titles
         xaxis_title="Episodes",
-        yaxis_title="Average Reward",
+        yaxis_title="Reward",
         # Make the graph bigger (dimensions in pixels)
         width=2000,
         height=1200,
@@ -104,7 +107,7 @@ def build_results_html(type_result):
     build_results_table(fig, type_result)
     # add the graphs
     build_results_graph(fig, type_result)
-    fig.write_html(f"results/lunar_lander_discrete_experiments_{type_result}.html")
+    fig.write_html(f"results/lunar_lander_DQN_experiments_{type_result}.html")
     fig.show()
 
 

@@ -1,13 +1,11 @@
 """
-    A solution for Deep QLearning.
-    Q learning using a neural network to approximate Q
+    A simple class to store, print and save results
 """
 import numpy as np
 import json
 import os
 import datetime
 import matplotlib.pyplot as plt
-#from pyparsing import results
 
 
 class Results():
@@ -15,16 +13,11 @@ class Results():
         self.params = params
         self.type_result = type_result
         self.results = []
-        #self.recent_rewards = []
 
     def append_data(self, episode, total_reward, epsilon):
         self.results.append([episode, total_reward, epsilon])
-        #self.recent_rewards.append(total_reward)
 
-    #def avg_window_rewards(self, avg_window):
-    #    return np.mean(self.recent_rewards[-self.avg_window:])
-
-    def print_info(self, prelude='TRAIN', avg_window=100, flush_each=50):
+    def print_info(self, prelude='TRAIN', avg_window=100, flush_each=10):
         episode = self.results[-1][0]
         total_reward = self.results[-1][1]
         epsilon = self.results[-1][2]
@@ -46,7 +39,6 @@ class Results():
     def plot(self):
         results = np.array(self.results)
         plt.figure()
-        # plt.plot(range(len(results)), , label="total reward")
         plt.plot(results[:, 0], results[:, 1], label="Total reward")
         plt.plot(results[:, 0], results[:, 2], label="100*epsilon")
         plt.xlabel("Episode")

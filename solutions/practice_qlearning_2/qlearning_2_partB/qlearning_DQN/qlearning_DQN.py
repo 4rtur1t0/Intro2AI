@@ -27,7 +27,7 @@ class QLearningDQN():
         #self.epsilon_step = None  # computed later
         self.epsilon_percentage = params.get('epsilon_percentage', 0.25) # ratio de episodios para llegar a epsilon_min
         # Each 50 episodes of training, test 10 times without updating your knowledge
-        self.training_tests = params.get('training_tests', (50, 10))
+        self.training_tests = params.get('training_tests', (50, 50))
         #self.epsilon = self.epsilon_max
         self.target_update_freq = params.get('target_update_freq', 250)  # Steps between target network syncs
         self.hidden_layer_sizes = params.get('hidden_layer_sizes', (64, 64))
@@ -83,7 +83,7 @@ class QLearningDQN():
             res = self.inline_test(episode)
             if res is not None: results_out.append_data(episode=episode, total_reward=res[1], epsilon=100*epsilon_greedy.epsilon)
             results_running.append_data(episode=episode, total_reward=total_reward, epsilon=epsilon_greedy.epsilon)
-            results_running.print_info(flush_each=20)
+            results_running.print_info(flush_each=10)
         return results_out
 
     def train_networks(self, total_steps):
@@ -158,9 +158,10 @@ class QLearningDQN():
         # inline test
         if episode % self.training_tests[0] == 0:
             test_train_results = self.test(total_episodes=self.training_tests[1], print_info=False)
-            #test_train_results.print_info(avg_window = self.training_tests[1], flush_each=self.training_tests[1])
             mean_test_train_results = test_train_results.mean()
+            print(80 * '#')
             print(f"INLINE TEST {episode:4d} | Avg reward ({self.training_tests[1]}): {mean_test_train_results[1]:6.1f} | Epsilon: 0.")
+            print(80 * '#')
             return mean_test_train_results
         return None
 

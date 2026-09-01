@@ -75,16 +75,13 @@ def train_discrete_qlearning_batch():
         print(30*'#')
         total_episodes = experiment['total_episodes']
         # TRAIN!
-        qlearning.train(total_episodes=total_episodes)
-        qlearning.save_results(experiment_name=experiment['exp_name'],
-                               type_result='train')
+        results = qlearning.train(total_episodes=total_episodes)
+        results.save(experiment_name=experiment['exp_name'])
         print(30 * '#')
         print('TEST ' + experiment['exp_name'])
         print(30 * '#')
-        qlearning.test(total_episodes=1000)
-        qlearning.save_results(experiment_name=experiment['exp_name'],
-                               type_result='test')
-
+        results = qlearning.test(total_episodes=1000)
+        results.save(experiment_name=experiment['exp_name'])
 
 if __name__ == "__main__":
     train_discrete_qlearning_batch()

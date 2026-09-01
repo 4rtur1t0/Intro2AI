@@ -1,22 +1,19 @@
 from qlearning_discrete.qlearning_discrete import QLearningD
 import gymnasium as gym
-import matplotlib.pyplot as plt
 
 def test_qlearning():
+    render_mode = None #'human'
+    episodes_test = 200
     try:
-        environment = gym.make("LunarLander-v3", render_mode='human')
+        environment = gym.make("LunarLander-v3", render_mode=render_mode)
     except Exception:
-        environment = gym.make("LunarLander-v2", render_mode='human')
+        environment = gym.make("LunarLander-v2", render_mode=render_mode)
     qlearningd = QLearningD(environment=environment)
-    qlearningd.read_q_table(filename='qtable_lunar_lander.pkl')
+    qlearningd.read_model(filename='qtable_lunar_lander.pkl')
     print('Testing mode!')
-    res=qlearningd.test(total_episodes=5)
-    plt.figure()
-    plt.plot(res)
-    plt.xlabel('Episodios')
-    plt.ylabel('Recompensa')
-    plt.title('Recompensa en episodios de test')
-    plt.show()
+    results = qlearningd.test(total_episodes=episodes_test)
+    results.save(experiment_name='test')
+    results.plot()
 
 if __name__ == "__main__":
     test_qlearning()

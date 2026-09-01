@@ -2,7 +2,6 @@ import time
 import gymnasium as gym
 import pygame
 
-
 def test_human():
     # Initialize Gymnasium environment with human rendering mode
     try:
