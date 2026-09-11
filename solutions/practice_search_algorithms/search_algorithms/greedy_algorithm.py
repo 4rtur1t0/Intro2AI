@@ -47,7 +47,7 @@ class Greedy_Algorithm():
         # reorder queue according to current flying distances
         self.queue = [self.queue[i] for i in sort_index]
 
-    def get_route(self, current_node):
+    def reconstruct_route(self, current_node):
         route = []
         total_distance = 0
         while current_node is not None:
@@ -75,7 +75,6 @@ class Greedy_Algorithm():
                        'flying_distance': self.graph.compute_flying_distance(start_name, destination_name)}]
         self.visited_nodes = [start_name]
         self.node_info[start_name] = {'parent': None}
-
         iterations = 0
         while len(self.queue) > 0:
             iterations += 1
@@ -88,7 +87,7 @@ class Greedy_Algorithm():
             if current_node_name == destination_name:
                 print('Found destination! in iterations: ', iterations)
                 # Found solution: destination reached --> reconstruct the route
-                route, distance = self.get_route(current_node_name)
+                route, distance = self.reconstruct_route(current_node_name)
                 return route, distance, iterations
             self.process_neighbors(current_node_name, destination_name)
             # TODO: CUIDADO! DEBEMOS REORDENAR LA LISTA DE ACUERDO CON NUESTRA HEURÍSTICA

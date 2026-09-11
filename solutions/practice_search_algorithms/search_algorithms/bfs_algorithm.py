@@ -32,7 +32,7 @@ class BFS_Algorithm():
                 self.node_info[neighbor] = {'parent': current_node_name}
                 self.queue.append({'name': neighbor})
 
-    def get_route(self, current_node_name):
+    def reconstruct_route(self, current_node_name):
         """
         Troba la ruta calculada des d'el node final fins a l'inicial buscant en el diccionari node_info
         :param current_node:
@@ -74,7 +74,7 @@ class BFS_Algorithm():
             print('Current node is: ', current_node)
             if current_node_name == destination_name:
                 print('Found destination! In iterations: ', iterations)
-                route, distance = self.get_route(current_node_name)
+                route, distance = self.reconstruct_route(current_node_name)
                 return route, distance, iterations
             self.process_neighbors(current_node_name)
         return None, None, iterations  # No route exists

@@ -55,7 +55,6 @@ class Graph:
         self.add_edge("Madrid", "Cuenca")
         self.add_edge("Madrid", "Segovia")
         self.add_edge("Madrid", "Toledo")
-        # self.add_edge("Madrid", "Albacete")
         self.add_edge("Madrid", "Ciudad Real")
         self.add_edge("Madrid", "Tarancón")
         self.add_edge("Tarancón", "Albacete")

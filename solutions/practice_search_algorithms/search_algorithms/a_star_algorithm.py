@@ -54,7 +54,7 @@ class A_star_Algorithm():
         # reorder queue according to current flying distances
         self.queue = [self.queue[i] for i in sort_index]
 
-    def get_route(self, current_node):
+    def reconstruct_route(self, current_node):
         route = []
         # total_distance = 0# en este caso, el último nodo ya incluye la distancia acumulada
         total_distance = self.node_info[current_node].get('accumulated_distance')
@@ -74,7 +74,6 @@ class A_star_Algorithm():
         self.queue = [{'name': start_name, 'ranking_distance': 0}]
         self.visited_nodes = [start_name]
         self.node_info[start_name] = {'parent': None, 'accumulated_distance': 0}
-
         iterations = 0
         while len(self.queue) > 0:
             iterations += 1
@@ -84,13 +83,18 @@ class A_star_Algorithm():
             current_node = self.queue.pop(0)
             current_node_name = current_node['name']
             print('Current node is: ', current_node)
+            # CONDICION INCOMPLETA!
             if current_node_name == destination_name:
                 print('Found destination! In iterations: ', iterations)
                 # Found solution: destination reached --> reconstruct the route
-                route, distance = self.get_route(current_node_name)
+                route, distance = self.reconstruct_route(current_node_name)
                 return route, distance, iterations
             self.process_neighbors_A_star(current_node_name, destination_name)
             # TODO: CUIDADO! DEBEMOS REORDENAR LA LISTA DE ACUERDO CON NUESTRA HEURÍSTICA
             self.reorder_queue()
-        return None, None, iterations  # No route exists
+            print(self.queue)
+        # No route exists
+        return None, None, iterations
+
+
 

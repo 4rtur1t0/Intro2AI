@@ -22,8 +22,7 @@ coordenadas = {
     "Murcia": (-1.1307, 37.9922),
     "Valencia": (-0.3763, 39.4699),
     "Gandia": (-0.1814, 38.9671),
-    "Tarancón": (-3.0076, 40.0075),
-    "Murcia": (-1.1239, 38.0336)
+    "Tarancón": (-3.0076, 40.0075)
 }
 
 ciudades = list(coordenadas.keys())
