@@ -20,8 +20,8 @@ if __name__ == "__main__":
     #route, distance, iterations = algoritmo.find_route(origen , destino)
 
     algoritmo = A_star_Algorithm(spain_network)
-    origen = 'Madrid'
-    destino = 'Elche'
+    origen = 'Alicante'
+    destino = 'Soria'
     route, distance, iterations = algoritmo.find_route(origen, destino)
 
     # Print Results ---

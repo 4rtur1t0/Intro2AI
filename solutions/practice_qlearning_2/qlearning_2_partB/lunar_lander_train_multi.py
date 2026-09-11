@@ -73,7 +73,7 @@ def train_deep_qlearning():
     experiments = set_experiments()
     total_episodes_train = 1000
     total_episodes_test = 500
-    repetitions = 3
+    repetitions = 5
     pbar = tqdm(total=repetitions*len(experiments), desc='Optimización DQN', colour='green')
     for experiment in experiments:
         for i in range(repetitions):

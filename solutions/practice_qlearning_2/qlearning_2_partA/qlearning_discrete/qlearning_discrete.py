@@ -34,7 +34,7 @@ class QLearningD():
         self.gamma = params.get('gamma', 1.0)
         self.epsilon_max = params.get('epsilon_max', 1.0)
         self.epsilon_min = params.get('epsilon_min', 0.01)
-        self.epsilon_percentage = params.get('epsilon_percentage', 0.2)  # ratio de episodios para llegar a epsilon_min
+        self.epsilon_percentage = params.get('epsilon_percentage', 0.25)  # ratio de episodios para llegar a epsilon_min
         self.training_tests = params.get('training_tests', (50, 10))
         #self.avg_window = 100 # una ventana para hacer la media móvil del resultado
         # para guardar resultados

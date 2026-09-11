@@ -2,6 +2,8 @@ from qlearning.qlearning import QLearning
 import gymnasium as gym
 
 def test_qlearning():
+    render_mode = "human"
+    # render_mode = None
     environment = gym.make('CliffWalking-v1', render_mode="human")
     qlearning = QLearning(environment=environment)
     #qlearning.create_random_q_table()
