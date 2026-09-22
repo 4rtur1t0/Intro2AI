@@ -2,7 +2,8 @@ from qlearning_discrete.qlearning_discrete import QLearningD
 import gymnasium as gym
 
 def test_qlearning():
-    render_mode = None #'human'
+    # render_mode = None
+    render_mode = 'human'
     episodes_test = 200
     try:
         environment = gym.make("LunarLander-v3", render_mode=render_mode)
