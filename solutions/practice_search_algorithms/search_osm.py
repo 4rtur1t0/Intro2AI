@@ -23,17 +23,17 @@ out body;
 out skel qt;
 """
 from search_algorithms.a_star_algorithm_osm import A_star_Algorithm_OSM
-# import matplotlib.pyplot as plt
 import osmnx as ox
-
 
 if __name__ == "__main__":
     # OPCIÓN A: Descargar datos en vivo (Recomendado)
     # lugar = "Elche, Spain"
     # print(f"Descargando la red vial para: {lugar}...")
     # G = ox.graph_from_place(lugar, network_type="drive")
+    #################################################################
     # OPCIÓN B: Usar un archivo local descargado de Overpass Turbo
-    ################################
+    # Descomenta uno de los mapas y los destinos de ejemplo.
+    #################################################################
     print('Cargando el mapa...')
     G = ox.graph_from_xml("maps/map0.osm")
     print('Mapa cargado.')
@@ -54,7 +54,6 @@ if __name__ == "__main__":
     # gps_origen = (38.2694, -0.706661)
     # gps_destino = (39.35, -0.48)
     ################################
-
 
     # EL MISMO ALGORITMO DE ANTES --> se debe modificar para manejar el nuevo mapa
     algoritmo = A_star_Algorithm_OSM(G)
