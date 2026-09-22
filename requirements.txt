@@ -1,0 +1,9 @@
+numpy
+gymnasium[all]
+osmnx
+networkx
+matplotlib
+geopandas
+scikit-learn
+contextily
+plotly
