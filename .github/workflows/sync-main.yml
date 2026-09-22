@@ -16,5 +16,5 @@ jobs:
 
       - name: Push Public Branch to Public Repo
         run: |
-          git remote add public https://x-access-token:${{ secrets.PUBLIC_REPO_PAT }}@github.com/4rtur1t0/Intro2AI.git
+          git remote add public https://x-access-token:${{ secrets.INTRO2AI_publish_private_to_public }}@github.com/4rtur1t0/Intro2AI.git
           git push public public:main --force
