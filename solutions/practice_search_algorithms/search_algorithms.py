@@ -2,7 +2,7 @@ from graph.graph import Graph
 from search_algorithms.a_star_algorithm import A_star_AlgorithmB
 from search_algorithms.bfs_algorithm import BFS_Algorithm
 from search_algorithms.greedy_algorithm import Greedy_Algorithm
-from search_algorithms.a_star_algorithm import A_star_Algorithm
+# from search_algorithms.a_star_algorithm import A_star_Algorithm
 
 if __name__ == "__main__":
     spain_network = Graph()
