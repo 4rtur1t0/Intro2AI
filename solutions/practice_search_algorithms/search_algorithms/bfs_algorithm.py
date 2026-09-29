@@ -9,7 +9,7 @@ class BFS_Algorithm():
         # saves the parent of each node to backtrack the route
         self.node_info = {}
 
-    def process_neighbors(self, current_node_name):
+    def process_neighbors(self, current_node):
         """
         Obtain the neighbours (successors) of the current node.
             For each node:
@@ -20,7 +20,7 @@ class BFS_Algorithm():
         :return:
         """
         # Get the list of neighbors of the current node
-        neighbors = self.graph.get_neighbors(current_node_name)
+        neighbors = self.graph.get_neighbors(current_node)
         print('Found neighbors:', neighbors)
         # para cada vecino neighbour encontrado, se comprueba si ya se ha visitado. Si ya se ha visitado, se continúa.
         # si no se ha visitado, se añade a la lista de nodos visitados, se añade al diccionario de información de nodos
@@ -29,8 +29,8 @@ class BFS_Algorithm():
             if neighbor not in self.visited_nodes:
                 # si no se ha visitado: a) se añade a la lista de visitados y b) se añade a la cola de exploración
                 self.visited_nodes.append(neighbor)
-                self.node_info[neighbor] = {'parent': current_node_name}
-                self.queue.append({'name': neighbor})
+                self.node_info[neighbor] = {'parent': current_node}
+                self.queue.append(neighbor)
 
     def reconstruct_route(self, current_node_name):
         """
@@ -60,7 +60,7 @@ class BFS_Algorithm():
         if not self.graph.get_node(start_name) or not self.graph.get_node(destination_name):
             return None
         # se inicializa la cola y la lista de nodos visitados
-        self.queue = [{'name': start_name}]
+        self.queue = [start_name]
         self.visited_nodes = [start_name]
         # el node inicial no té pare
         self.node_info[start_name] = {'parent': None}
@@ -70,12 +70,12 @@ class BFS_Algorithm():
             print('Current queue is: ', self.queue)
             # pop the current_node from the queue
             current_node = self.queue.pop(0)
-            current_node_name = current_node.get('name')
+            # current_node_name = current_node.get('name')
             print('Current node is: ', current_node)
-            if current_node_name == destination_name:
+            if current_node == destination_name:
                 print('Found destination! In iterations: ', iterations)
-                route, distance = self.reconstruct_route(current_node_name)
+                route, distance = self.reconstruct_route(current_node)
                 return route, distance, iterations
-            self.process_neighbors(current_node_name)
+            self.process_neighbors(current_node)
         return None, None, iterations  # No route exists
 

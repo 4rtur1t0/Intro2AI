@@ -43,7 +43,7 @@ class Graph:
         :return:
         """
         neighbors = self.graph.get(name)
-        neighbors = list(neighbors.keys())
+        # neighbors = list(neighbors.keys())
         return neighbors
 
     def build_network(self):
