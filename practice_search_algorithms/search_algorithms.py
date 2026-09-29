@@ -1,5 +1,4 @@
 from graph.graph import Graph
-from search_algorithms.a_star_algorithm import A_star_AlgorithmB
 from search_algorithms.bfs_algorithm import BFS_Algorithm
 from search_algorithms.greedy_algorithm import Greedy_Algorithm
 from search_algorithms.a_star_algorithm import A_star_Algorithm
@@ -20,7 +19,7 @@ if __name__ == "__main__":
     #destino = 'Elche'
     #route, distance, iterations = algoritmo.find_route(origen , destino)
 
-    algoritmo = A_star_AlgorithmB(spain_network)
+    algoritmo = A_star_Algorithm(spain_network)
     origen = 'Soria'
     destino = 'Elche'
     route, distance, iterations = algoritmo.find_route(origen, destino)

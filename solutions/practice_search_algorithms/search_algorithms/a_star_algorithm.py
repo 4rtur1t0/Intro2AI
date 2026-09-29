@@ -1,17 +1,17 @@
 import numpy as np
 from collections import defaultdict
 
-class A_star_Algorithm():
+class A_star_AlgorithmB():
     def __init__(self, graph):
         self.graph = graph
         self.queue = []
         self.visited_nodes = []
         self.node_info = {}
-        # se inicializa g y f con distancias infinitas
+        # se inicializa g y f con
         self.g_scores = defaultdict(lambda: np.inf)
         self.f_scores = defaultdict(lambda: np.inf)
 
-    def process_neighbors(self, current_node_name, destination_name):
+    def process_neighbors_A_star(self, current_node_name, destination_name):
         # Get the list of neighbors of the current node
         neighbors = self.graph.get_neighbors(current_node_name)
         print('Found neighbors:', neighbors)
@@ -81,7 +81,7 @@ class A_star_Algorithm():
                 # Found solution: destination reached --> reconstruct the route
                 route, distance = self.reconstruct_route(current_node)
                 return route, distance, iterations
-            self.process_neighbors(current_node, destination_name)
+            self.process_neighbors_A_star(current_node, destination_name)
             self.reorder_queue()
         # No route exists
         return None, None, iterations
