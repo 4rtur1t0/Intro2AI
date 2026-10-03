@@ -25,6 +25,10 @@ class Graph:
         self.graph[node1_name][node2_name] = distance
         self.graph[node2_name][node1_name] = distance
 
+    def get_nodes(self):
+        """Returns all nodes in the graph."""
+        return list(self.graph.keys())
+
     def get_node(self, name):
         """Safely fetches a Node object by name, returns None if missing."""
         return self.graph.get(name)
