@@ -5,7 +5,7 @@ from search_algorithms.a_star_algorithm import A_star_Algorithm
 
 if __name__ == "__main__":
     spain_network = Graph()
-    spain_network.build_network()
+    spain_network.build_network2()
     print(spain_network.graph)
     spain_network.plot_network()
 
@@ -20,8 +20,8 @@ if __name__ == "__main__":
     #route, distance, iterations = algoritmo.find_route(origen , destino)
 
     algoritmo = A_star_Algorithm(spain_network)
-    origen = 'Soria'
-    destino = 'Elche'
+    origen = 'Madrid'
+    destino = 'Villena'
     route, distance, iterations = algoritmo.find_route(origen, destino)
 
     # Print Results ---

@@ -71,6 +71,31 @@ class Graph:
         self.add_edge("Murcia", "Elche")
         self.add_edge("Murcia", "Albacete")
 
+    def build_network2(self):
+        """
+        Given here as a particular problem of roads connecting cities in Spain.
+        """
+        # Build your city network
+        #self.add_edge("Madrid", "Guadalajara")
+        self.add_edge("Madrid", "Cuenca")
+        #self.add_edge("Madrid", "Segovia")
+        #self.add_edge("Madrid", "Toledo")
+        #self.add_edge("Madrid", "Ciudad Real")
+        self.add_edge("Madrid", "Tarancón")
+        self.add_edge("Tarancón", "Albacete")
+        #self.add_edge("Ciudad Real", "Puertollano")
+        #self.add_edge("Guadalajara", "Calatayud")
+        #self.add_edge("Calatayud", "Soria")
+        self.add_edge("Cuenca", "Albacete")
+        #self.add_edge("Cuenca", "Valencia")
+        #self.add_edge("Valencia", "Gandia")
+        #self.add_edge("Gandia", "Alicante")
+        self.add_edge("Albacete", "Villena")
+        #self.add_edge("Villena", "Alicante")
+        #self.add_edge("Alicante", "Elche")
+        #self.add_edge("Murcia", "Elche")
+        #self.add_edge("Murcia", "Albacete")
+
     def gps_position_data(self):
         """
         Also storing the GPS position of each city. Useful to compute the flying distance from any node to the destination

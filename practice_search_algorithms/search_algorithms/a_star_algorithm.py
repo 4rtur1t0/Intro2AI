@@ -38,7 +38,7 @@ class A_star_Algorithm():
         """
         distances = []
         for node_name in self.queue:
-            f = self.g_scores[node_name]
+            f = self.f_scores[node_name]
             distances.append(f)
         sort_index = np.argsort(distances)
         # reorder queue according to current flying distances
