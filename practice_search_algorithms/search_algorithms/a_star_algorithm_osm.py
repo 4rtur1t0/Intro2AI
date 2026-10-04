@@ -41,7 +41,7 @@ class A_star_Algorithm_OSM():
         distance_meters = ox.distance.great_circle(lat1, lon1, lat2, lon2)
         return distance_meters
 
-    def process_neighbors_A_star(self, current_node_name, destination_name):
+    def process_neighbors(self, current_node_name, destination_name):
         # Get the list of neighbors of the current node
         neighbors = self.graph.neighbors(current_node_name)
         print('Found neighbors:', neighbors)
@@ -119,7 +119,7 @@ class A_star_Algorithm_OSM():
                 # Found solution: destination reached --> reconstruct the route
                 route, distance = self.reconstruct_route(current_node)
                 return route, distance, iterations
-            self.process_neighbors_A_star(current_node, destination_name)
+            self.process_neighbors(current_node, destination_name)
             self.reorder_queue()
             iterations += 1
         # No route exists
