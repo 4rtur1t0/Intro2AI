@@ -4,8 +4,7 @@ from collections import defaultdict
 class Dijkstra_Algorithm():
     def __init__(self, graph):
         self.graph = graph
-        #self.queue = []
-        self.visited_nodes = []
+        self.marked_nodes = []
         self.node_info = {}
         self.distances = defaultdict(lambda: np.inf)
 
@@ -27,7 +26,7 @@ class Dijkstra_Algorithm():
         for k, v in self.distances.items():
             if v==float('inf'):
                 continue
-            if k not in self.visited_nodes:
+            if k not in self.marked_nodes:
                 dists.append(v)
                 names.append(k)
         current_node = names[np.argmin(dists)]
@@ -39,7 +38,7 @@ class Dijkstra_Algorithm():
         print('Found neighbors:', neighbors)
         # cumulative distance of current node
         for neighbor in neighbors:
-            if neighbor in self.visited_nodes:
+            if neighbor in self.marked_nodes:
                 continue
             # se calcula el valor acumulado, añadiendo el tramo de carretera
             d = self.graph.get_distance(current_node, neighbor)
@@ -66,8 +65,13 @@ class Dijkstra_Algorithm():
             print(30 * '=')
             current_node = self.get_next_node()
             print('Current node is: ', current_node)
-            self.visited_nodes.append(current_node)
-            if len(self.visited_nodes)==len(self.graph.get_nodes()):
+            self.marked_nodes.append(current_node)
+            # si queremos encontrar una única distancia a un nodo
+            #if current_node == destination_name:
+            #    break
+            # Si queremos encontrar la mínima distancia (y ruta) a todos
+            # los nodos del mapa
+            if len(self.marked_nodes)==len(self.graph.get_nodes()):
                 break
             self.process_neighbors(current_node)
         route, distance = self.reconstruct_route(destination_name)
