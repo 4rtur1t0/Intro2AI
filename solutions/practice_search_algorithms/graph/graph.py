@@ -25,6 +25,10 @@ class Graph:
         self.graph[node1_name][node2_name] = distance
         self.graph[node2_name][node1_name] = distance
 
+    def get_nodes(self):
+        """Returns all nodes in the graph."""
+        return list(self.graph.keys())
+
     def get_node(self, name):
         """Safely fetches a Node object by name, returns None if missing."""
         return self.graph.get(name)
@@ -43,7 +47,7 @@ class Graph:
         :return:
         """
         neighbors = self.graph.get(name)
-        neighbors = list(neighbors.keys())
+        # neighbors = list(neighbors.keys())
         return neighbors
 
     def build_network(self):
@@ -70,6 +74,16 @@ class Graph:
         self.add_edge("Alicante", "Elx")
         self.add_edge("Murcia", "Elx")
         self.add_edge("Murcia", "Albacete")
+
+    def build_network2(self):
+        """
+        Given here as a particular problem of roads connecting cities in Spain.
+        """
+        self.add_edge("Madrid", "Cuenca")
+        self.add_edge("Madrid", "Tarancón")
+        self.add_edge("Tarancón", "Albacete")
+        self.add_edge("Cuenca", "Albacete")
+        self.add_edge("Albacete", "Villena")
 
     def gps_position_data(self):
         """

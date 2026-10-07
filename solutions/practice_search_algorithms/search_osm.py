@@ -38,7 +38,7 @@ if __name__ == "__main__":
     G = ox.graph_from_xml("maps/map0.osm")
     print('Mapa cargado.')
     gps_origen = (38.2694, -0.706661)
-    gps_destino = (38.25, -0.65)
+    gps_destino = (38.2674, -0.707661)
     ################################
     ################################
     # print('Cargando el mapa...')
@@ -65,4 +65,4 @@ if __name__ == "__main__":
     print(f"ID Nodo Destino más cercano: {nodo_destino}")
     route, distance, iterations = algoritmo.find_route(nodo_origen, nodo_destino)
     # Ahora ploteamos sobre un mapa real satelital. Ajusta el zoom entre 5 (grueso) y 16 (fino)
-    algoritmo.plot_route(route, distance, zoom_level=13)
+    algoritmo.plot_route(route, distance, zoom_level=15)
