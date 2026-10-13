@@ -12,7 +12,7 @@ class A_star_Algorithm():
 
     def reconstruct_route(self, current_node):
         route = []
-        # total_distance = 0# en este caso, el último nodo ya incluye la distancia acumulada
+        # en este caso, el último nodo ya incluye la distancia acumulada
         total_distance = self.g_scores[current_node]
         while current_node is not None:
             route.append(current_node)
@@ -29,8 +29,6 @@ class A_star_Algorithm():
     def process_neighbors(self, current_node, destination_name):
         # Get the list of neighbors of the current node
         neighbors = self.graph.get_neighbors(current_node)
-        # print('Found neighbors:', neighbors)
-        # cumulative distance of current node
         for neighbor in neighbors:
             if neighbor in self.closed_queue:
                 continue
@@ -62,10 +60,14 @@ class A_star_Algorithm():
         distance = None
         iterations = 0
         while len(self.open_queue) > 0:
+            iterations += 1
             current_node = self.get_next_node()
+            #################################################
+            # EJERCICIO 2.12: IMPRIMA EL NODO ACTUAL Y LOS VECINOS
             print(30 * '=')
             print('Current node is: ', current_node)
             print(30 * '=')
+            #################################################
             self.closed_queue.append(current_node)
             if current_node == destination_name:
                 route, distance = self.reconstruct_route(destination_name)
@@ -73,8 +75,6 @@ class A_star_Algorithm():
             self.process_neighbors(current_node, destination_name)
         print('THE MINIMUM DISTANCES FROM START TO OTHER NODES:', start_name)
         print(self.g_scores)
-        # print('THE RANKING DISTANCES:', start_name)
-        # print(self.f_scores)
         return route, distance, iterations
 
 

@@ -23,39 +23,42 @@ out body;
 out skel qt;
 """
 from search_algorithms.a_star_algorithm_osm import A_star_Algorithm_OSM
-# import matplotlib.pyplot as plt
 import osmnx as ox
 
 
 if __name__ == "__main__":
     # OPCIÓN A: Descargar datos en vivo (Recomendado)
-    # lugar = "Elche, Spain"
-    # print(f"Descargando la red vial para: {lugar}...")
-    # G = ox.graph_from_place(lugar, network_type="drive")
-    # OPCIÓN B: Usar un archivo local descargado de Overpass Turbo
+    lugar = "Elche, Spain"
+    zoom_level = 12
+    print(f"Descargando la red vial para: {lugar}...")
+    G = ox.graph_from_place(lugar, network_type="drive")
+    #OPCIÓN B: Usar un archivo local descargado de Overpass Turbo
     ################################
-    print('Cargando el mapa...')
-    G = ox.graph_from_xml("maps/map0.osm")
+    #print('Cargando el mapa...')
+    #G = ox.graph_from_xml("maps/map0.osm")
+    #zoom_level = 12
     print('Mapa cargado.')
     gps_origen = (38.2694, -0.706661)
-    gps_destino = (38.2674, -0.707661)
+    gps_destino = (38.24118, -0.6752)
     ################################
     ################################
-    # print('Cargando el mapa...')
-    # G = ox.graph_from_xml("maps/map1.osm")
-    # print('Mapa cargado.')
-    # gps_origen = (38.2694, -0.706661)
-    # gps_destino = (38.35, -0.48)
+    #print('Cargando el mapa...')
+    #G = ox.graph_from_xml("maps/map1.osm")
+    #zoom_level = 10
+    #print('Mapa cargado.')
+    #gps_origen = (38.2694, -0.706661)
+    #gps_destino = (38.35, -0.48)
     ################################
     ###############################
-    # print('Cargando el mapa...')
-    # G = ox.graph_from_xml("maps/map2.osm")
-    # print('Mapa cargado.')
-    # gps_origen = (38.2694, -0.706661)
-    # gps_destino = (39.35, -0.48)
+    #print('Cargando el mapa...')
+    #G = ox.graph_from_xml("maps/map2.osm")
+    #print('Mapa cargado.')
+    #zoom_level = 8
+    #gps_origen = (38.2694, -0.706661)
+    #gps_destino = (39.35, -0.48)
     ################################
 
-
+    ################################
     # EL MISMO ALGORITMO DE ANTES --> se debe modificar para manejar el nuevo mapa
     algoritmo = A_star_Algorithm_OSM(G)
     # Buscamos los nodos reales de la red más cercanos a nuestros puntos GPS
@@ -65,4 +68,4 @@ if __name__ == "__main__":
     print(f"ID Nodo Destino más cercano: {nodo_destino}")
     route, distance, iterations = algoritmo.find_route(nodo_origen, nodo_destino)
     # Ahora ploteamos sobre un mapa real satelital. Ajusta el zoom entre 5 (grueso) y 16 (fino)
-    algoritmo.plot_route(route, distance, zoom_level=15)
+    algoritmo.plot_route(route, distance, zoom_level=zoom_level)

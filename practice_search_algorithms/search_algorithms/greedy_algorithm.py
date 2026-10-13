@@ -30,7 +30,9 @@ class Greedy_Algorithm():
         :param destination:
         :return:
         """
-        # TODO: debe reordenarse la cola abierta (self.open_queue) en base a los valores de la heurística h
+        ###########################################################################################
+        # EJERCICIO 2.8: debe reordenarse la cola abierta (self.open_queue) en base a los valores de la heurística h
+        ###########################################################################################
         return
 
     def reconstruct_route(self, current_node_name):
@@ -77,7 +79,9 @@ class Greedy_Algorithm():
             if neighbor not in self.open_queue:
                 self.open_queue.append(neighbor)
                 self.node_info[neighbor] = {'parent': current_node}
+                ###########################################################################################
                 # EJERCICIO 2.8: OJO! debemos calcular la distancia en línea recta hasta el destino
+                ###########################################################################################
 
     def find_route(self, start_name, destination_name):
         """Finds a route using iterative Breadth-First Search."""
@@ -93,7 +97,6 @@ class Greedy_Algorithm():
         iteration = 0
         self.print_info(iteration=iteration, current_node=None)
         while len(self.open_queue) > 0:
-            iteration += 1
             current_node = self.open_queue.pop(0)
             self.closed_queue.append(current_node)
             self.print_info(iteration=iteration, current_node=current_node)
@@ -101,6 +104,9 @@ class Greedy_Algorithm():
                 route, distance = self.reconstruct_route(current_node)
                 return route, distance, iteration
             self.process_neighbors(current_node, destination_name)
-            self.reorder_queue()
+            #########################################################
+            # EJERCICIO 2.8: PROGRAME Y LLAME a self.reorder_queue para reordenar la cola
+            # y poder elegir el nodo con menor h
+            #########################################################
         return None, None, iteration  # No route exists
 

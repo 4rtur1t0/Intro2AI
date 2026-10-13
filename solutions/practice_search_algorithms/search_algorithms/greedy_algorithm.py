@@ -25,12 +25,14 @@ class Greedy_Algorithm():
 
     def reorder_queue(self):
         """
-        TODO: quitar función, debe añadirla el estudiante.
         Al añadir esta función, ya no es BFS, sino que en la cola se incluye el nodo con mayor interés
         (menor distancia). Al reordenarse, se procesará en la siguiente iteración este nodo.
         :param destination:
         :return:
         """
+        #######################################################
+        # EJERCICIO 2.8: SE DEBE REORDENAR LA LISTA EN BASE A H
+        #######################################################
         # OJO, LENTO!... PERO DEBE SER CLARO!
         # SE INDICA UNA ALTERNATIVA EN LA MEMORIA
         fd_list = []
