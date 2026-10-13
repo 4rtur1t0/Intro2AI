@@ -25,6 +25,10 @@ class Graph:
         self.graph[node1_name][node2_name] = distance
         self.graph[node2_name][node1_name] = distance
 
+    def get_nodes(self):
+        """Returns all nodes in the graph."""
+        return list(self.graph.keys())
+
     def get_node(self, name):
         """Safely fetches a Node object by name, returns None if missing."""
         return self.graph.get(name)
@@ -43,7 +47,6 @@ class Graph:
         :return:
         """
         neighbors = self.graph.get(name)
-        # neighbors = list(neighbors.keys())
         return neighbors
 
     def build_network(self):
@@ -67,9 +70,19 @@ class Graph:
         self.add_edge("Gandia", "Alicante")
         self.add_edge("Albacete", "Villena")
         self.add_edge("Villena", "Alicante")
-        self.add_edge("Alicante", "Elche")
-        self.add_edge("Murcia", "Elche")
+        self.add_edge("Alicante", "Elx")
+        self.add_edge("Murcia", "Elx")
         self.add_edge("Murcia", "Albacete")
+
+    def build_network2(self):
+        """
+        Given here as a particular problem of roads connecting cities in Spain.
+        """
+        self.add_edge("Madrid", "Cuenca")
+        self.add_edge("Madrid", "Tarancón")
+        self.add_edge("Tarancón", "Albacete")
+        self.add_edge("Cuenca", "Albacete")
+        self.add_edge("Albacete", "Villena")
 
     def gps_position_data(self):
         """
@@ -92,7 +105,7 @@ class Graph:
             "Albacete": {"lat": 38.9943, "lon": -1.8585},
             "Villena": {"lat": 38.6318, "lon": -0.8612},
             "Alicante": {"lat": 38.3452, "lon": -0.4810},
-            "Elche": {"lat": 38.2699, "lon": -0.7126},
+            "Elx": {"lat": 38.2699, "lon": -0.7126},
             "Orihuela": {"lat": 38.0848, "lon": -0.9440},
             "Murcia": {"lat": 37.9922, "lon": -1.1307},
             "Valencia": {"lat": 39.4699, "lon": -0.3763},
@@ -112,7 +125,7 @@ class Graph:
         # 12: Villena, 13: Alicante, 14: Elche, 15: Orihuela, 16: Murcia, 17: Valencia, 18: Gandia
         ciudades = ["Madrid", "Guadalajara", "Cuenca", "Teruel", "Segovia", "Toledo", "Soria",
                     "Ciudad Real", "Puertollano", "Calatayud", "Zaragoza", "Albacete",
-                    "Villena", "Alicante", "Elche", "Orihuela", "Murcia", "Valencia", "Gandia", "Tarancón"]
+                    "Villena", "Alicante", "Elx", "Orihuela", "Murcia", "Valencia", "Gandia", "Tarancón"]
         idx_orig = ciudades.index(origen)
         idx_dest = ciudades.index(destino)
         # Matriz de distancias por carretera en kilómetros (20x20)

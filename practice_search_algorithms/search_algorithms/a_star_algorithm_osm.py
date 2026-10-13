@@ -4,20 +4,14 @@ import matplotlib.pyplot as plt
 import contextily as cx
 import osmnx as ox
 
-
-
 class A_star_Algorithm_OSM():
-    """
-    Modified to work with OSM
-    """
     def __init__(self, graph):
         self.graph = graph
-        self.queue = []
-        self.visited_nodes = []
+        self.open_queue = []
+        self.closed_queue = []
         self.node_info = {}
-        # se inicializa g y f con
         self.g_scores = defaultdict(lambda: np.inf)
-        self.f_scores = defaultdict(lambda: np.inf)
+        self.h_scores = defaultdict(lambda: np.inf)
 
     def get_node(self, node_id):
         return self.graph.nodes[node_id]
@@ -34,55 +28,30 @@ class A_star_Algorithm_OSM():
         return node
 
     def compute_flying_distance(self, current_node_name, destination_name):
-        # Extract lat (y) and lon (x) for both nodes
-        lat1, lon1 = self.graph.nodes[current_node_name]['y'], self.graph.nodes[current_node_name]['x']
-        lat2, lon2 = self.graph.nodes[destination_name]['y'], self.graph.nodes[destination_name]['x']
-        # Calculate great-circle distance in meters
-        distance_meters = ox.distance.great_circle(lat1, lon1, lat2, lon2)
-        return distance_meters
+        ################################################################
+        # EJERCICIO 4.1: se debe completar el código usando las funciones
+        # de osmnx.!:
+        # ################################################################
+        return 0
 
-    def process_neighbors_A_star(self, current_node_name, destination_name):
-        # Get the list of neighbors of the current node
-        neighbors = self.graph.neighbors(current_node_name)
-        print('Found neighbors:', neighbors)
-        # cumulative distance of current node
-        for neighbor in neighbors:
-            # Optional: check that you can travel from node A to B. If no edge exists, just skip it.
-            # This is recommended, according to the osmnx library
-            if not self.graph.has_edge(current_node_name, neighbor):
-                continue
-            # se calcula el valor acumulado, añadiendo el tramo de carretera
-            datos_aristas = self.graph.get_edge_data(current_node_name, neighbor)
-            d = datos_aristas[0].get('length')
-            tentative_g_score = self.g_scores[current_node_name] + d
-            if tentative_g_score < self.g_scores[neighbor]:
-                self.node_info[neighbor] = {'parent': current_node_name}
-                self.g_scores[neighbor] = tentative_g_score
-                # h = self.graph.compute_flying_distance(neighbor, destination_name)
-                h = self.compute_flying_distance(neighbor, destination_name)
-                self.f_scores[neighbor] = tentative_g_score + h
-                if neighbor not in self.queue:
-                    self.queue.append(neighbor)
+    def get_distance(self, current_node, neighbor):
+        ################################################################
+        # EJERCICIO 4.1: se debe completar el código usando las funciones
+        # de osmnx.!:
+        # ################################################################
+        d = 0
+        return d
 
-    def reorder_queue(self):
-        """
-        TODO: quitar función, debe añadirla el estudiante.
-        Al añadir esta función, ya no es BFS, sino que en la cola se incluye el nodo con mayor interés
-        (menor distancia). Al reordenarse, se procesará en la siguiente iteración este nodo.
-        :param destination:
-        :return:
-        """
-        distances = []
-        for node_name in self.queue:
-            f = self.g_scores[node_name]
-            distances.append(f)
-        sort_index = np.argsort(distances)
-        # reorder queue according to current flying distances
-        self.queue = [self.queue[i] for i in sort_index]
+    def get_neighbors(self, current_node):
+        ################################################################
+        # EJERCICIO 4.1: se debe completar el código usando las funciones
+        # de osmnx.!:
+        # ################################################################
+        return None
 
     def reconstruct_route(self, current_node):
         route = []
-        # total_distance = 0# en este caso, el último nodo ya incluye la distancia acumulada
+        # en este caso, el último nodo ya incluye la distancia acumulada
         total_distance = self.g_scores[current_node]
         while current_node is not None:
             route.append(current_node)
@@ -90,6 +59,41 @@ class A_star_Algorithm_OSM():
         # Reverse to get start -> destination
         route = route[::-1]
         return route, total_distance
+
+    def get_next_node(self):
+        """
+        Ordena la lista abierta y hace pop del nodo a la izquierda
+        """
+        # sort with respect to f = g + h and pop the minimum
+        self.open_queue.sort(key=lambda x: self.g_scores[x] + self.h_scores[x])
+        return self.open_queue.pop(0)
+
+    def process_neighbors(self, current_node, destination_name):
+        # Get the list of neighbors of the current node
+        neighbors = self.get_neighbors(current_node)
+        for neighbor in neighbors:
+            if neighbor in self.closed_queue:
+                continue
+            # se calcula el valor acumulado, añadiendo el tramo intermedio de carretera
+            ###############################################################
+            # EJERCICIO 4.1! self.graph.distance --> self.get_distance
+            # complete el código para calcular g!
+            ###############################################################
+            temp_dist = self.g_scores[current_node]
+            if neighbor not in self.open_queue:
+                self.open_queue.append(neighbor)
+                self.g_scores[neighbor] = temp_dist
+                ###############################################################
+                # EJERCICIO 4.1: self.graph.compute_flying_distance --> self.compute_flying_distance
+                # complete el código para calcular h!
+                ###############################################################
+                self.h_scores[neighbor] = 0
+                self.node_info[neighbor] = {'parent': current_node}
+            if temp_dist < self.g_scores[neighbor]:
+                # Este caso contempla la situación en la que se observe un nodo
+                # vecino y se pueda llegar a él con menos distancia desde el origen
+                self.g_scores[neighbor] = temp_dist
+                self.node_info[neighbor] = {'parent': current_node}
 
     def find_route(self, start_name, destination_name):
         """
@@ -102,29 +106,25 @@ class A_star_Algorithm_OSM():
         if start_name not in self.graph or destination_name not in self.graph:
             print("No se encuentra el nodo de origen o el de destino en el grafo")
             return None, None, None
-        self.queue = [start_name]
-        self.node_info[start_name] = {'parent': None}
         self.g_scores[start_name] = 0
-        # f(start) = g + h = h
-        self.f_scores[start_name] = self.compute_flying_distance(start_name, destination_name) # g + h
+        ###############################################################
+        # EJERCICIO 4.1!: CUIDADO, se debe definir esta función con el grafo de OSM
+        # complete el código de compute_flying_distance
+        ###############################################################
+        self.h_scores[start_name] = self.compute_flying_distance(start_name, destination_name)
+        self.node_info[start_name] = {'parent': None}
+        self.open_queue.append(start_name)
+        route = None
+        distance = None
         iterations = 0
-        while len(self.queue) > 0:
-            print(30 * '=')
-            print('Current queue is: ', self.queue)
-            # pop current_node from the queue
-            current_node = self.queue.pop(0)
-            print('Current node is: ', current_node)
+        while len(self.open_queue) > 0:
+            current_node = self.get_next_node()
+            self.closed_queue.append(current_node)
             if current_node == destination_name:
-                print('Found destination! In iterations: ', iterations)
-                # Found solution: destination reached --> reconstruct the route
-                route, distance = self.reconstruct_route(current_node)
-                return route, distance, iterations
-            self.process_neighbors_A_star(current_node, destination_name)
-            self.reorder_queue()
-            iterations += 1
-        # No route exists
-        return None, None, iterations
-
+                route, distance = self.reconstruct_route(destination_name)
+                break
+            self.process_neighbors(current_node, destination_name)
+        return route, distance, iterations
 
     def plot_route(self, ruta_nodos, distancia_total, zoom_level=15):
         """
@@ -168,5 +168,3 @@ class A_star_Algorithm_OSM():
         ax.set_title("Ruta sobre el mapa satelital", fontsize=12)
         plt.tight_layout()
         plt.show()
-
-
