@@ -28,15 +28,15 @@ import osmnx as ox
 
 if __name__ == "__main__":
     # OPCIÓN A: Descargar datos en vivo (Recomendado)
-    lugar = "Elche, Spain"
-    zoom_level = 12
-    print(f"Descargando la red vial para: {lugar}...")
-    G = ox.graph_from_place(lugar, network_type="drive")
+    #lugar = "Elche, Spain"
+    #zoom_level = 12
+    #print(f"Descargando la red vial para: {lugar}...")
+    #G = ox.graph_from_place(lugar, network_type="drive")
     #OPCIÓN B: Usar un archivo local descargado de Overpass Turbo
     ################################
-    #print('Cargando el mapa...')
-    #G = ox.graph_from_xml("maps/map0.osm")
-    #zoom_level = 12
+    print('Cargando el mapa...')
+    G = ox.graph_from_xml("maps/map0.osm")
+    zoom_level = 12
     print('Mapa cargado.')
     gps_origen = (38.2694, -0.706661)
     gps_destino = (38.24118, -0.6752)
