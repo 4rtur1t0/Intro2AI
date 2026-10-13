@@ -4,6 +4,7 @@ from search_algorithms.greedy_algorithm import Greedy_Algorithm
 from search_algorithms.dijskstra_algorithm import Dijkstra_Algorithm
 from search_algorithms.a_star_algorithm import A_star_Algorithm
 
+
 if __name__ == "__main__":
     spain_network = Graph()
     spain_network.build_network()
@@ -22,15 +23,15 @@ if __name__ == "__main__":
     # destino = 'Elx'
     # route, distance, iterations = algoritmo.find_route(origen, destino)
 
-    algoritmo = Greedy_Algorithm(spain_network)
+    # algoritmo = Greedy_Algorithm(spain_network)
+    # origen = 'Madrid'
+    # destino = 'Elx'
+    # route, distance, iterations = algoritmo.find_route(origen , destino)
+
+    algoritmo = A_star_Algorithm(spain_network)
     origen = 'Madrid'
     destino = 'Elx'
-    route, distance, iterations = algoritmo.find_route(origen , destino)
-
-    # algoritmo = A_star_Algorithm(spain_network)
-    # origen = 'Soria'
-    # destino = 'Elche'
-    # route, distance, iterations = algoritmo.find_route(origen, destino)
+    route, distance, iterations = algoritmo.find_route(origen, destino)
 
    # algoritmo = Dijkstra_Algorithm(spain_network)
    # origen = 'Madrid'
