@@ -1,13 +1,17 @@
 import matplotlib.pyplot as plt
+from mujoco.experimental.studio.sample import render
+
 from qlearning.qlearning import QLearning
 import gymnasium as gym
 
 def train_qlearning():
     # use render_mode="human" para observar el entorno gráficamente
+    # render_mode = None
+    render_mode = "human"
     try:
-        environment = gym.make('Taxi-v3')
+        environment = gym.make('Taxi-v3', render_mode=render_mode)
     except:
-        environment = gym.make('Taxi-v4')
+        environment = gym.make('Taxi-v4', render_mode=render_mode)
     params = {'alpha': 0.1, 'gamma': 1.0}
     qlearning = QLearning(environment=environment, params=params)
     print('LET US LEARN NOW!')

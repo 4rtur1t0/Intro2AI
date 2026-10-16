@@ -3,7 +3,9 @@ import gymnasium as gym
 
 def train_qlearning():
     # use render_mode="human" para observar el entorno gráficamente
-    environment = gym.make('CliffWalking-v1', max_episode_steps=200)
+    render_mode = None
+    # render_mode = "human"
+    environment = gym.make('CliffWalking-v1', max_episode_steps=200, render_mode=render_mode)
     params = {'alpha': 0.5, 'gamma': 0.5, 'percentage_target': 0.25}
     qlearning = QLearning(environment=environment, params=params)
     print('LET US LEARN NOW!')
