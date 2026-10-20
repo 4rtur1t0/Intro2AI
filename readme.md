@@ -22,7 +22,7 @@ Activamos el entorno virtual, al llamar a python o pip estaremos ejecutando espe
 este entorno.
 ~/Applications/venvAI/bin$ source ./activate
 # ejecutamos pip usando el fichero de requirements
-./pip install -r /home/usuario/Desktop/IntroAI/requirements.txt
+./pip install -r /home/usuario/Desktop/Intro2AI/requirements.txt
 ./pip install numpy
 ./pip install gymnasium[all]
 ./pip install stable-baselines3 swig torch
