@@ -1,6 +1,4 @@
 import matplotlib.pyplot as plt
-from mujoco.experimental.studio.sample import render
-
 from qlearning.qlearning import QLearning
 import gymnasium as gym
 
