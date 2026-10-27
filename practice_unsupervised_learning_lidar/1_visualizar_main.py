@@ -15,6 +15,10 @@ BARRIDO = 'data/kitti_00_001560'
 
 
 if __name__ == "__main__":
+    ############################################################################
+    # EJERCICIO 1: SE DEBE COMPLETAR EL CÓDIGO POR EL ESTUDIANTE.
+    # Complete la función cargar_nube para cargar los puntos de la nube
+    ############################################################################
     nube = cargar_nube(BARRIDO + '.bin')
     print('Forma del array leído: ', nube.shape)
     print('Primeros 5 puntos (x, y, z, intensidad):')

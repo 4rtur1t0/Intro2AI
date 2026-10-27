@@ -78,11 +78,36 @@ if __name__ == "__main__":
                titulo='Ejercicio 3.c · verticalidad (azul = horizontal, rojo = vertical)')
     visualizar(nube, colores_por_valor(curvatura, 'magma'),
                titulo='Ejercicio 3.c · curvatura (oscuro = liso, claro = desordenado)')
-    X_geo = np.column_stack([nube[:, 2], verticalidad, curvatura]).astype(np.float64)
+    ######################################################
+    # CARACTERÍSTICAS: (z, vert, curv)
+    ######################################################
+    z = nube[:, 2:3].astype(np.float64)
+    X_geo = np.column_stack((z, verticalidad, curvatura)).astype(np.float64)
     # estandarizar: cada columna con media 0 y desviación 1, para que las tres pesen igual
     X_geo = (X_geo - X_geo.mean(axis=0)) / X_geo.std(axis=0)
     _, tabla['z + geometría'] = probar('z + verticalidad + curvatura', X_geo, nube, clase)
 
+    ######################################################
+    # OPCIONAL: que las pruebe el alumno otras características: (vert, curv)
+    # OPCIONAL: que las pruebe el alumno otras características: (z, vert, curv, Intensidad)
+    # OPCIONAL: que las pruebe el alumno: (curv)
+    # OPCIONAL: que las pruebe el alumno: (vert)
+    # OPCIONAL: que las pruebe el alumno: (z, vert)
+    # OPCIONAL: que las pruebe el alumno: (z, curv)
+    # OPCIONAl: (2*vert, curv). Se pueden escalar después de la normalizacíón
+    ######################################################
+    I = nube[:, 3:4].astype(np.float64)
+    X_geo = np.column_stack((z, verticalidad, curvatura, I)).astype(np.float64)
+    # X_geo = np.column_stack((verticalidad, curvatura)).astype(np.float64)
+    # X_geo = np.column_stack([curvatura]).astype(np.float64)
+    # X_geo = np.column_stack([verticalidad]).astype(np.float64)
+    # X_geo = np.column_stack((z, verticalidad)).astype(np.float64)
+    # X_geo = np.column_stack((z, curvatura)).astype(np.float64)
+    # estandarizar: cada columna con media 0 y desviación 1, para que las tres pesen igual
+    X_geo = (X_geo - X_geo.mean(axis=0)) / X_geo.std(axis=0)
+    _, tabla['otra geometría'] = probar('otras caracteristicas', X_geo, nube, clase)
+
+    # RESUMEN DE RESULTADOS
     print('\nRESUMEN (suelo = clase positiva)  accuracy  precision  recall  F1-score    IoU')
     for nombre, m in tabla.items():
         print('   %-30s' % nombre + ''.join('%9.1f %%' % (100 * v) for v in m.values()))

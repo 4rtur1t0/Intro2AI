@@ -10,7 +10,8 @@
 """
 import numpy as np
 from sklearn.cluster import DBSCAN
-from lidar.nube import cargar_nube, cargar_etiquetas, dentro_del_recorte, colores_por_grupo, visualizar
+from lidar.nube import cargar_nube, cargar_etiquetas, dentro_del_recorte, colores_por_grupo, visualizar, \
+    colores_por_clase
 from lidar.kmeans import kmeans
 from lidar.suelo import es_suelo, es_objeto
 
@@ -80,6 +81,11 @@ if __name__ == "__main__":
     suelo = nube[es_suelo(clase)]
     XY = objetos[:, :2].astype(np.float64)
     print('Puntos en el recorte: %d   ·   objetos (sin suelo, z < 0,8 m): %d' % (len(nube), len(objetos)))
+    ###########################################################
+    # PROFESOR: OPCIONAL, SE AÑADE UNA VISUALIZACIÓN INICIAL
+    ###########################################################
+    visualizar(objetos, colores_por_clase(clase_obj), titulo='Ejercicio 4 · nube de partida con clases iniciales')
+    ###########################################################
 
     # 4.a DBSCAN en vista cenital
     etiquetas, n_grupos, n_ruido = agrupar_dbscan(XY, EPS, MIN_SAMPLES)
@@ -92,6 +98,16 @@ if __name__ == "__main__":
     print('\n4.b  Efecto de eps (min_samples = %d)' % MIN_SAMPLES)
     for eps in [0.2, 0.3, 0.5, 1.0, 2.0]:
         e, g, r = agrupar_dbscan(XY, eps, MIN_SAMPLES)
+        print('     eps = %.1f m: %3d grupos, %4d de ruido, %s'
+              % (eps, g, r, resumen_coches(e, clase_obj, instancia_obj)))
+
+    ###########################################################
+    # 4b, bis) PROFESOR: OPCIONAL, SE AGRUPAN EN 3D usando también Z
+    ###########################################################
+    XYZ = objetos[:, :3].astype(np.float64)
+    print('\n4.b (BIS)  Efecto de eps (min_samples = %d)' % MIN_SAMPLES)
+    for eps in [0.2, 0.3, 0.5, 1.0, 2.0]:
+        e, g, r = agrupar_dbscan(XYZ, eps, MIN_SAMPLES)
         print('     eps = %.1f m: %3d grupos, %4d de ruido, %s'
               % (eps, g, r, resumen_coches(e, clase_obj, instancia_obj)))
 

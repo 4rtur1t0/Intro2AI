@@ -105,7 +105,7 @@ def colores_por_grupo(etiquetas, semilla=0):
 def a_open3d(puntos, colores=None):
     """Crea un o3d.geometry.PointCloud con las tres primeras columnas de `puntos`."""
     pcd = o3d.geometry.PointCloud()
-    pcd.points = o3d.utility.Vector3dVector(puntos[:, :3].astype(np.float64))
+    pcd.points = o3d.utility.Vector3dVector(puntos[:, :3].astype(np.float32))
     if colores is not None:
         pcd.colors = o3d.utility.Vector3dVector(colores)
     return pcd
