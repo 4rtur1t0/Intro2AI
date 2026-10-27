@@ -93,7 +93,7 @@ if __name__ == "__main__":
     ############################################################################
     # EJERCICIO 3: SE DEBE COMPLETAR EL CÓDIGO POR EL ESTUDIANTE.
     # Matriz de atributos (N, 3) con la z, la verticalidad y la curvatura de cada punto.
-    # AYUDA: np.column_stack([a, b, c]) pone tres vectores (N,) como columnas.
+    # AYUDA: np.column_stack((a, b, c)) pone tres vectores (N,) como columnas.
     ############################################################################
     raise NotImplementedError('EJERCICIO 3 sin completar: X_geo')
     # estandarizar: cada columna con media 0 y desviación 1, para que las tres pesen igual

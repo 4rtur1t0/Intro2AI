@@ -86,7 +86,13 @@ def metricas(TP, FP, FN, TN):
 
 def imprimir_evaluacion(TP, FP, FN, TN):
     """Imprime la matriz de confusión y las métricas en porcentaje."""
+    print(100*'#')
     print('                      predicho suelo   predicho objeto')
     print('     real suelo      %15d %17d' % (TP, FN))
     print('     real objeto     %15d %17d' % (FP, TN))
+    print(100 * '#')
+    print('TP: %10d, FP: %10d, FN: %10d, TN: %10d' % (TP, FP, FN, TN))
+    print(100 * '#')
     print('     ' + '   '.join('%s %.1f %%' % (k, 100 * v) for k, v in metricas(TP, FP, FN, TN).items()))
+    print(100 * '#')
+
