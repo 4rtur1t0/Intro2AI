@@ -11,7 +11,7 @@ def train_qlearning():
         environment = gym.make('Taxi-v3')
     except:
         environment = gym.make('Taxi-v4')
-    total_episodes_train = 5000
+    total_episodes_train = 1500
     total_episodes_test = 500
     alphas = np.linspace(0.05, 1.0, 5)  # alpha
     gammas = np.linspace(0.05, 1.0, 5)  # gamma
@@ -25,6 +25,7 @@ def train_qlearning():
             qlearning.train(total_episodes=total_episodes_train)
             results = qlearning.test(total_episodes=total_episodes_test)
             total_results[i][j]=np.mean(results)
+    # AHORA MOSTRAMOS EL RESULTADO
     fig, ax = plt.subplots()
     im = ax.imshow(total_results)
     # Show all ticks and label them with the respective list entries

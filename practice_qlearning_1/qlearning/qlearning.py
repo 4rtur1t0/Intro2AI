@@ -36,15 +36,20 @@ class QLearning():
                                        total_episodes=total_episodes,
                                        percentage_target=self.percentage_target)
         recent_rewards = []
-        # COMPLETE EL MÉTODO DE TRAIN
-
+        #################################################
+        # EJERCICIO 6.3: COMPLETE EL MÉTODO DE TRAIN
+        #################################################
+        raise NotImplementedError('EJERCICIO 6.3 sin completar: debe completar QLearning.train()')
         print("Training finished! Your Q-table is optimized.")
         return self.q_table
 
 
     def update_q_table(self, state, action, next_state, reward):
-        # CALCULE LA ACTUALIZACIÓN DE Q-table usando la ecuación de Bellman
+        #################################################
+        # EJERCICIO 6.4: CALCULE LA ACTUALIZACIÓN DE Q-table usando la ecuación de Bellman
+        #################################################
         # self.q_table[state, action] =
+        raise NotImplementedError('EJERCICIO 6.3 sin completar: debe completar QLearning.train()')
         return
 
     def test(self, total_episodes, save_results=False):
