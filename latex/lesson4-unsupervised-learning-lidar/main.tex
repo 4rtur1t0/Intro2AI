@@ -76,7 +76,7 @@ Lea la nube con
 \begin{exercise}\label{ej:visualizar}
 Complete \texttt{cargar\_nube} y \texttt{a\_open3d} en \texttt{lidar/nube.py} y los huecos de \texttt{1\_visualizar\_main.py}:
 \begin{enumerate}
-    \item Calcule el \textbf{número de puntos} del barrido. Debe obtener \textbf{122\,485}.
+    \item Calcule el \textbf{número de puntos} del barrido. Debe obtener \textbf{122.485} puntos.
     \item Visualice la nube en \texttt{open3d} \textbf{coloreada por la intensidad} (columna 3). La función \texttt{colores\_por\_valor} ya convierte un valor por punto en un color.
 \end{enumerate}
 El programa termina mostrando la nube \textbf{coloreada por clase} con las etiquetas de SemanticKITTI (figura~\ref{fig:barrido}) y una tabla con las clases presentes: calzada (33{,}7\,\%), edificio (17{,}5\,\%), acera (15{,}4\,\%), vegetación (12{,}5\,\%), coche (10{,}5\,\%)\dots
@@ -92,31 +92,37 @@ El programa termina mostrando la nube \textbf{coloreada por clase} con las etiqu
 
 
 \section{k-means desde cero}
-k-means busca $k$ puntos, los \textbf{centroides}, que representen bien a los datos, y repite dos pasos hasta que se estabiliza:
+El algoritmo \textit{k-means} plantea la agrupación de nuestro conjunto de datos en $k$ conjuntos. Para ello, el algoritmo genera $k$ \textbf{centroides} aleatorios. Cada punto del conjunto de datos se asocia a un centroide (al más cercano, dada una función de distancia). Seguidamente, se recalculan los centroides (como el valor medio de los puntos que tiene asociados). En definitiva, el algoritmo repite los siguientes pasos hasta que se estabiliza:
 \begin{enumerate}
     \item \textbf{Asignación}: cada punto se asigna al centroide más cercano.
     \item \textbf{Actualización}: cada centroide se mueve a la \textbf{media} de los puntos que se le han asignado.
 \end{enumerate}
-Lo que el algoritmo hace disminuir en cada iteración es la \textbf{inercia} total $J$, definida como la suma de las distancias al cuadrado de cada punto $x_i$ a su centroide $c_{j(i)}$:
+En cada iteración, el algoritmo disminuye la \textbf{inercia} total $J$, definida como la suma de las distancias al cuadrado de cada punto $x_i$ a su centroide $c_{j(i)}$:
 \[
 J = \sum_{i=1}^{N} \lVert x_i - c_{j(i)} \rVert^2 .
 \]
 
 \begin{exercise}\label{ej:kmeans}
-Complete \texttt{asignar}, \texttt{actualizar}, \texttt{inercia} y \texttt{kmeans} en \texttt{lidar/kmeans.py} usando \texttt{numpy}. No recorra los puntos uno a uno con un bucle: con cien mil puntos sería muy lento; recorra los $k$ centroides y opere con todos los puntos a la vez.
+Se desea que el/la estudiante sea capaz de programar el algoritmo \texttt{k-means} usando la librería numpy.\\
+\textbf{EJERCICIO}\\
+\begin{itemize}
+\item Escriba una \textbf{implementación completa del algoritmo} \textit{k-means} usando únicamente python y numpy: complete el código de \texttt{asignar}, \texttt{actualizar}, \texttt{inercia} y \texttt{kmeans} en \texttt{lidar/kmeans.py} usando \texttt{numpy}. No recorra los puntos uno a uno en un bucle: con cien mil puntos sería muy lento; recorra los $k$ centroides y opere con todos los puntos a la vez.
 
-Ejecute \texttt{2\_kmeans\_main.py}. Agrupa las coordenadas $(x, y, z)$ del recorte de 40\,m $\times$ 40\,m alrededor del sensor (109\,994 puntos) en $k = 4$ grupos y compara su k-means con el de \texttt{scikit-learn} partiendo de los \textbf{mismos centroides iniciales}. Si su implementación es correcta, ambos deben dar la misma inercia (\textbf{4\,136\,190,7}), el mismo número de iteraciones (37) y el 100\,\% de etiquetas iguales. ¿Qué forma tienen los cuatro grupos que se ven en \texttt{open3d}? ¿Separan objetos o simplemente reparten el espacio? Pruebe a cambiar k=5, 6, 7 \ldots. ¿Qué observa?
+\item Use la clase \texttt{KMeans} de scikit-learn para agupar los datos. Para ello, ejecute \texttt{2\_kmeans\_main.py}. Agrupa las coordenadas $(x, y, z)$ del recorte de 40\,m $\times$ 40\,m alrededor del sensor (109.994 puntos) en $k = 4$ grupos y compare su \textit{k-means} con el de \texttt{scikit-learn} partiendo de los \textbf{mismos centroides iniciales}. 
+
+\item Si su implementación es correcta, los resultados de ambos algoritmos deben dar, como resultado, la misma inercia (\textbf{4.136.190,7}), el mismo número de iteraciones (37) y el 100\,\% de etiquetas iguales. ¿Qué forma tienen los cuatro grupos que se ven en \texttt{open3d}? ¿Separan objetos o simplemente reparten el espacio? Pruebe a cambiar k=5, 6, 7 \ldots. ¿Qué observa?
+\end{itemize}
 \end{exercise}
 
-Hemos podido implementar el algoritmo k-means con un resultado igual al muy probado algoritmo de la librería Scikit-learn. Sin embargo, \textbf{la agrupación de los puntos no nos proporciona ninguna información de provecho}: simplemente agrupa los puntos por cercanía, mientras minimiza la inercia total del conjunto. \textbf{Así pues, la posición del punto no es una característica de interés para poder agrupar los puntos en entidades con significado.
+Hemos podido implementar el algoritmo k-means con un resultado igual al muy probado algoritmo de la librería Scikit-learn. Sin embargo, \textbf{la agrupación de los puntos no nos proporciona ninguna información de provecho}: simplemente agrupa los puntos por cercanía, mientras minimiza la inercia total del conjunto. \textbf{Así pues, podemos asegurar que la posición del punto no es una característica de interés para poder agrupar los puntos en entidades con significado.
 }
 
 
 \section{Suelo frente al resto: la importancia de las características}
-Probemos con la tarea más sencilla: separar la nube recortada en \textbf{dos} grupos, suelo y todo lo demás. Según las etiquetas proporcionadas por KITTI, el 57{,}1\,\% de sus puntos son suelo (calzada, acera, aparcamiento, terreno\dots). A continuación, voveremos a ejecutar el algoritmo k-means de la misma manera, pero cambiaremos la información de cada punto. El algoritmo será siempre el mismo, k-means con $k = 2$, pero a cada punto le asignaremos otra información.
+En este apartado nos vamos a enfrentar a una tarea más sencilla: separar la nube recortada en \textbf{dos} grupos, suelo y todo lo demás. Según las etiquetas proporcionadas por KITTI, el 57{,}1\,\% de sus puntos son suelo (calzada, acera, aparcamiento, terreno\dots). A continuación, volveremos a ejecutar el algoritmo k-means de la misma manera, pero cambiaremos la información de cada punto. El algoritmo será siempre el mismo, k-means con $k = 2$, pero a cada punto le asignaremos otra información.
 
 \begin{tcolorbox}[colback=gray!5!white, colframe=gray!60!black, title=\textbf{Cómo se evalúa: matriz de confusión y métricas}]
-k-means no sabe cuál de sus dos grupos es el suelo: para evaluar se toma la correspondencia grupo $\rightarrow$ clase que más puntos acierta, como se hace siempre al comparar un agrupamiento con etiquetas. Con el \textbf{suelo como clase positiva}, cada punto cae en una casilla de la \textbf{matriz de confusión}: \textbf{TP} (suelo predicho como suelo), \textbf{FN} (suelo predicho como objeto), \textbf{FP} (objeto predicho como suelo) y \textbf{TN} (objeto predicho como objeto). De ella salen las métricas estándar:
+El algoritmo \textit{k-means}  es estrictamente un algoritmo de agrupación (\textit{clustering}): no es un algoritmo de clasificación. Así pues, el resultado del algoritmo es un conjunto de \textit{datapoints} agrupados, pero por defecto ninguno de esos grupos se asocia a una etiqueta de suelo u otros. En el caso que nos ocupa, y con la intención de poder evaluar la calidad de la agrupación de los datos, hacemos una presunción importante: se toma la correspondencia grupo $\rightarrow$ clase que más puntos acierta, como se hace siempre al comparar un agrupamiento con etiquetas. Con el \textbf{suelo como clase positiva}, cada punto cae en una casilla de la \textbf{matriz de confusión}: \textbf{TP} (suelo predicho como suelo), \textbf{FN} (suelo predicho como objeto), \textbf{FP} (objeto predicho como suelo) y \textbf{TN} (objeto predicho como objeto). De ella salen las métricas estándar:
 \begin{gather*}
 \text{accuracy} = \frac{TP + TN}{N}, \qquad
 \text{precision} = \frac{TP}{TP + FP}, \qquad
@@ -136,7 +142,7 @@ Como recordatorio, damos una definición formal de los anteriores parámetros y 
 \end{tcolorbox}
 
 \begin{tcolorbox}[colback=gray!5!white, colframe=gray!60!black, title=\textbf{Características geométricas (ya calculadas)}]
-Para cada punto, la función \texttt{caracteristicas\_geometricas} toma sus vecinos a menos de 0{,}5\,m y calcula la matriz de covarianza $3 \times 3$ de sus coordenadas. Sus autovectores definen las direcciones en que se extiende el vecindario (es un PCA local) y sus autovalores $\lambda_1 \geq \lambda_2 \geq \lambda_3$, indican amplitud en cada una de esas direcciones. La \textbf{normal} $\mathbf{n}$ de la superficie es la dirección en la que el vecindario varía \emph{menos}, esto es, la dirección asociada a $\lambda_3$. De ahí salen dos números por punto:
+Para cada punto, la función \texttt{caracteristicas\_geometricas} toma sus vecinos a menos de 0{,}5\,m y calcula la matriz de covarianza $3 \times 3$ de sus coordenadas. Sus autovectores definen las direcciones en que se extiende el vecindario (es un PCA local) y sus autovalores $\lambda_1 \geq \lambda_2 \geq \lambda_3$, indican amplitud en cada una de esas direcciones. La \textbf{normal} $\mathbf{\vec{n}}$ de la superficie es la dirección en la que el vecindario varía \emph{menos}, esto es, la dirección asociada a $\lambda_3$. De ahí salen dos características numéricas por cada punto de cada nube:
 \begin{itemize}
     \item \textbf{Verticalidad} $= 1 - |n_z|$: 0 en superficies horizontales (calzada, techo de un coche) y 1 en verticales (paredes, laterales de los coches, troncos).
     \item \textbf{Curvatura} $= \lambda_3 / (\lambda_1 + \lambda_2 + \lambda_3)$: 0 en superficies lisas y hasta $1/3$ en vecindarios desordenados (vegetación, esquinas).
@@ -145,17 +151,19 @@ Antes de agrupar, cada característica se \textbf{estandariza} (se le resta su m
 \end{tcolorbox}
 
 \begin{exercise}\label{ej:suelo}
+Deseamos aplicar el algoritmo k-means a los puntos de una nube. Sin embargo, ahora vamos a intentar agrupar estos puntos usando las características geométricas que hemos descrito anteriormente:\\
+\textbf{EJERCICIO}\\
 Complete los huecos de \texttt{3\_suelo\_main.py} y ejecútelo. 
-
-En la primera parte del programa, se muestra el suelo con \texttt{open3d} según las etiquetas conocidas de KITTI (figura~\ref{fig:suelo}a). A continuación, se evalúa la clasificación usando una \textbf{referencia trivial}. Con esta clasificación trivial (que dice que todo es suelo): accuracy 57{,}1\,\%, precision 57{,}1\,\%, recall 100\,\% y F1-score 72{,}7\,\%. \textbf{Nótese que este resultado es importante}, pues establece un límite inferior de los resultados: si hacemos una clasificación arbitraria, el F1-score es del 70\% aproximadamente, debemos superar este resultado con cualquier otra clasificación que hagamos.
-
-
-Para cada elección de atributos el programa imprime la matriz de confusión y las cinco métricas (tabla~\ref{tab:suelo}).
+\begin{itemize}
+\item En la primera parte del programa, se muestra el suelo con \texttt{open3d} según las etiquetas conocidas de KITTI (figura~\ref{fig:suelo}a). A continuación, se evalúa la clasificación usando una \textbf{referencia trivial}. Con esta clasificación trivial (que dice que todo es suelo): accuracy 57{,}1\,\%, precision 57{,}1\,\%, recall 100\,\% y F1-score 72{,}7\,\%. \textbf{Nótese que este resultado es importante}, pues establece un límite inferior de los resultados: si hacemos una clasificación arbitraria, el F1-score es del 70\% aproximadamente, debemos superar este resultado con cualquier otra clasificación que hagamos.
+\item Seguidamente, en el programa podemos cambiar los atributos usados como entrada a \textit{k-means}. Para cada elección de características el programa imprime la matriz de confusión y las cinco métricas (tabla~\ref{tab:suelo}).
 \begin{enumerate}
-    \item[a)] Atributos $(x, y, z)$. Debe obtener una accuracy del \textbf{51{,}8\,\%}, \emph{peor} que la referencia trivial, y un F1-score del 50{,}2\,\%. Mire el resultado en \texttt{open3d}: ¿por dónde corta k-means la nube? ¿Por qué, si $x$ e $y$ varían en 40\,m y $z$ apenas en unos metros?
-    \item[b)] Solo el atributo $z$ (cuidado: la matriz debe ser $N \times 1$, no un vector). Debe obtener un \textbf{recall del 100\,\%} pero una \textbf{precision del 79{,}8\,\%}: hay 15\,917 falsos positivos. Los centroides quedan en $z = -1{,}67$ y $z = -0{,}20$\,m. Calcule la \textbf{frontera} entre los dos grupos, la altura a partir de la cual un punto pasa de un grupo al otro ($-0{,}93$\,m). ¿Qué son esos falsos positivos, qué parte de los coches y de los muros acaba llamando ``suelo'' k-means? ¿Por qué?
-    \item[c)] Mire primero en \texttt{open3d} la nube coloreada por verticalidad y por curvatura (figura~\ref{fig:caracteristicas}): ¿qué sale en rojo?, ¿dónde es alta la curvatura? Después construya la matriz con $z$, verticalidad y curvatura. Debe obtener una precision del \textbf{95{,}9\,\%} y un recall del \textbf{98{,}6\,\%} (F1-score 97{,}2\,\%, IoU 94{,}6\,\%). ¿Qué ha arreglado la verticalidad respecto al apartado b)? Por último, comente la línea que estandariza y vuelva a ejecutar: la precision baja al 88{,}1\,\% (F1-score 93{,}7\,\%). ¿Por qué? (Pista: la desviación típica de la $z$ es 0{,}75\,m y la de la curvatura, 0{,}05.)
+    \item[a)] Atributos $(x, y, z)$. Debe obtener una accuracy del \textbf{51{,}8\,\%}, \emph{peor} que la referencia trivial, y un F1-score del 50{,}2\,\%. Observe el resultado en \texttt{open3d}: ¿por dónde corta k-means la nube? ¿Por qué, si $x$ e $y$ varían en 40\,m y $z$ apenas en unos metros?
+    \item[b)] Sólo el atributo $z$ (cuidado: la matriz debe ser $N \times 1$, no un vector). Debe obtener un \textbf{recall del 100\,\%} pero una \textbf{precision del 79{,}8\,\%}: hay 15.917 falsos positivos. Los centroides quedan en $z = -1{,}67$ y $z = -0{,}20$\,m. Calcule la \textbf{frontera} entre los dos grupos, la altura a partir de la cual un punto pasa de un grupo al otro ($-0{,}93$\,m). ¿Qué son esos falsos positivos, qué parte de los coches y de los muros acaba llamando ``suelo'' k-means? ¿Por qué?
+    \item[c)] Mire primero en \texttt{open3d} la nube coloreada por verticalidad y por curvatura (figura~\ref{fig:caracteristicas}): ¿qué sale en rojo?, ¿dónde es alta la curvatura? Después construya la matriz con $z$, verticalidad y curvatura. Deberá obtener una precision del \textbf{95{,}9\,\%} y un recall del \textbf{98{,}6\,\%} (F1-score 97{,}2\,\%, IoU 94{,}6\,\%). ¿Qué ha arreglado la verticalidad respecto al apartado b)? Por último, comente la línea que estandariza los datos y vuelva a ejecutar: la precision baja al 88{,}1\,\% (F1-score 93{,}7\,\%). ¿Por qué? (Pista: la desviación típica de la $z$ es 0{,}75\,m y la de la curvatura, 0{,}05.)
 \end{enumerate}
+\end{itemize}
+
 \end{exercise}
 
 \begin{figure}[h]
@@ -198,24 +206,26 @@ El algoritmo era el mismo en los tres casos. k-means no busca ``suelo'' ni ``obj
 
 
 \section{Objetos con DBSCAN}
-Para encontrar objetos, k-means tiene dos problemas: hay que decirle \textbf{cuántos} hay, y sus grupos son siempre ``redondos'' alrededor de un centroide. \textbf{DBSCAN} (\textit{Density-Based Spatial Clustering of Applications with Noise}) agrupa por \textbf{densidad} con dos parámetros: un radio \texttt{eps} y un número mínimo de vecinos \texttt{min\_samples}.
+Para encontrar objetos, k-means tiene dos problemas: 1) hay que decirle \textbf{cuántos} grupos, y 2) los grupos generados son siempre ``redondos'' alrededor de un centroide. El algoritmo \textbf{DBSCAN} (\textit{Density-Based Spatial Clustering of Applications with Noise}) agrupa por \textbf{densidad} con dos parámetros: un radio \texttt{eps} y un número mínimo de vecinos \texttt{min\_samples}.
 \begin{itemize}
     \item Un punto es \textbf{núcleo} si tiene al menos \texttt{min\_samples} puntos (contándose a sí mismo) a una distancia menor  de \texttt{eps}.
     \item Dos núcleos a una distancia menor de \texttt{eps} se fusionan en el mismo grupo; así, un grupo crece encadenando núcleos y puede tener \textbf{cualquier forma}.
     \item Un punto que no es núcleo pero está una distancia menor de \texttt{eps} de un punto que es \textbf{borde}, se une a su grupo. El resto es \textbf{ruido} (etiqueta $-1$).
 \end{itemize}
-El número de grupos lo decide el algoritmo. Para que el suelo no una todos los objetos entre sí, primero se quita, y se agrupa en \textbf{vista cenital}, solo con $(x, y)$. Aquí el suelo se quita con las etiquetas, para estudiar DBSCAN por separado; en un coche real se quitaría con un filtro geométrico (un plano ajustado con RANSAC, el filtro CSF\dots) o con un agrupamiento como el del ejercicio~\ref{ej:suelo}. También se quitan los puntos a más de unos 2{,}5\,m de altura (copas de árboles, aleros), que vistos desde arriba unirían lo que tienen debajo. Para medir el resultado, las etiquetas de instancia dicen qué puntos son de cada coche. Se usa el criterio estándar de la segmentación panóptica\footnote{A. Kirillov et al., \textit{Panoptic Segmentation}, CVPR, 2019. Es el criterio del \textit{benchmark} panóptico de SemanticKITTI.}: un coche es \textbf{detectado} si algún grupo tiene con él un $\text{IoU} > 0{,}5$, donde
+El número de grupos resultante lo decide el algoritmo. En el dataset de KITTI, en la práctica el suelo conecta todos los objetos entre sí. Para evitar este efecto indeseado, primero se elimina el suelo y se agrupa en \textbf{vista cenital}, sólo con las coordenadas $(x, y)$. Aquí el suelo se quita con las etiquetas, para estudiar DBSCAN por separado; en un coche real se quitaría con un filtro geométrico (un plano ajustado con RANSAC, el filtro CSF\dots) o con un agrupamiento como el del ejercicio~\ref{ej:suelo}. También se quitan los puntos a más de unos 2{,}5\,m de altura (copas de árboles, aleros), que vistos desde arriba unirían lo que tienen debajo. Para medir el resultado, las etiquetas de instancia dicen qué puntos son de cada coche. Se usa el criterio estándar de la segmentación panóptica\footnote{A. Kirillov et al., \textit{Panoptic Segmentation}, CVPR, 2019. Es el criterio del \textit{benchmark} panóptico de SemanticKITTI.}: un coche es \textbf{detectado} si algún grupo tiene con él un $\text{IoU} > 0{,}5$, donde
 \[
 \text{IoU}(\text{coche}, \text{grupo}) = \frac{|\text{coche} \cap \text{grupo}|}{|\text{coche} \cup \text{grupo}|}
 \]
-cuenta puntos. Con ese umbral cada coche solo puede emparejarse con un grupo, y, como en SemanticKITTI, se ignoran los coches con menos de 50 puntos. El programa da el \textbf{recall} (coches detectados entre coches que hay) y el \textbf{IoU medio} de los detectados, que dice cuánto se parece cada grupo a su coche.
+Con ese umbral cada coche solo puede emparejarse con un grupo, y, como en SemanticKITTI, se ignoran los coches con menos de 50 puntos. El programa da el \textbf{recall} (los coches detectados sobre el total de coches existentes) y el \textbf{IoU medio} de los detectados, que indica cuánto se parece cada grupo a su coche.
 
 \begin{exercise}\label{ej:dbscan}
+Deseamos observar el resultado de DBSCAN al variar algunos de sus parámetros.\\
+\textbf{EJERCICIO}\\
 Complete \texttt{agrupar\_dbscan} en \texttt{4\_dbscan\_main.py} usando \texttt{sklearn.cluster.DBSCAN} y ejecute el programa.
 \begin{enumerate}
     \item[a)] Con \texttt{eps} $= 0{,}5$\,m y \texttt{min\_samples} $= 8$ sobre los 46\,769 puntos de objeto debe obtener \textbf{45 grupos y 75 puntos de ruido}, con \textbf{15 de los 16 coches} detectados (recall 93{,}8\,\%) y un IoU medio de \textbf{0{,}97}. Busque en \texttt{open3d} el coche que falla, a unos 20\,m del sensor: ¿con qué se ha juntado?
-    \item[b)] El programa repite DBSCAN con varios \texttt{eps}: debe ver 98, 66, 45, 25 y 6 grupos para 0{,}2, 0{,}3, 0{,}5, 1 y 2\,m, con un recall de coches del 87{,}5, 100, 93{,}8, 56{,}2 y 6{,}2\,\%. Explique qué ocurre con los objetos cuando \texttt{eps} es demasiado pequeño y cuando es demasiado grande. Con 0{,}3\,m se detectan todos los coches; ¿por qué aun así puede no ser la mejor elección? (Pista: la métrica solo mira los coches; fíjese en el número de grupos y de puntos de ruido.)
-    \item[c)] k-means (el suyo) con $k = 45$, el número de grupos de DBSCAN, detecta solo \textbf{10 de 16} coches (recall 62{,}5\,\%), con un IoU medio de \textbf{0{,}80}. Compare en \texttt{open3d} con el apartado a): ¿qué hace k-means con un muro largo? ¿Y con dos coches aparcados muy juntos?
+    \item[b)] El programa repite DBSCAN con varios valores \texttt{eps}: debe ver 98, 66, 45, 25 y 6 grupos para 0{,}2, 0{,}3, 0{,}5, 1 y 2\,m, con un recall de coches del 87{,}5, 100, 93{,}8, 56{,}2 y 6{,}2\,\%. Explique qué ocurre con los objetos cuando \texttt{eps} es demasiado pequeño y cuando es demasiado grande. Con 0{,}3\,m se detectan todos los coches; ¿por qué aun así puede no ser la mejor elección? (Pista: la métrica solo mira los coches; fíjese en el número de grupos y de puntos de ruido.)
+    \item[c)] El programa usa \textit{k-means} (scikit-learn) con $k = 45$, el número de grupos de DBSCAN, detecta solo \textbf{10 de 16} coches (recall 62{,}5\,\%), con un IoU medio de \textbf{0{,}80}. Compare en \texttt{open3d} con el apartado a): ¿qué hace k-means con un muro largo? ¿Y con dos coches aparcados muy juntos?
     \item[d)] DBSCAN \textbf{sin quitar el suelo}, en $(x, y, z)$. ¿Qué porcentaje de los puntos acaba en el grupo mayor (90{,}9\,\%)? ¿Por qué?
 \end{enumerate}
 Opcional: cambie \texttt{BARRIDO} por \texttt{data/kitti\_08\_003880} en los ejercicios 3 y 4. En el ejercicio 3, el F1-score pasa del 71{,}8\,\% con la $z$ sola al 88{,}7\,\% con las características geométricas (la referencia trivial da 55{,}9\,\%). En el 4, DBSCAN detecta 9 de 11 coches (IoU medio 0{,}90) y k-means, 5 (IoU medio 0{,}78).

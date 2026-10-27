@@ -500,7 +500,8 @@ La clase \texttt{QLearning} se proporciona programada \textbf{parcialmente}, par
     \item En estos momentos la matriz Q no se conoce, con lo que el script genera una matriz Q aleatoria con el método \texttt{create\_random\_q\_table}.
     \item Si se utiliza la línea \texttt{qlearning.read\_q\_table(filename='qtable\_cliff.npy')} se cargará la tabla Q desde fichero. \textbf{Esto se deberá hacer cuando ya se haya entrenado y tengamos este fichero (script de train).}
     \item Si se ejecuta el script, el agente intentará resolver la tarea utilizando una matriz Q aleatoria: realizará movimientos de forma aleatoria sin llegar a su objetivo.
-\end{itemize}\\
+\end{itemize}
+
 \textbf{EJERCICIO}\\
 \begin{itemize}
     \item Ejecute el script \texttt{cliff\_q\_learning\_test.py}, al menos, 15 veces. Observe el comportamiento del agente. ¿Se consigue completar la tarea?    
@@ -1009,7 +1010,7 @@ Vemos que el problema del taxi, es más complejo que el problema del acantilado,
 
 
 
- Efectivamente, es necesario saber qué esta pasando en cada episodio durante el entrenamiento. En caso contrario, iremos ``a ciegas''. Cuando nos enfrentamos a problemas de aprendizaje más complejos, \textbf{es vital que sepamos si se está produciendo algún tipo de aprendizaje, pues durante el entrenamiento se está utilizando tiempo de cómputo y energía (ambos valiosos)}. En caso de que sospechemos que no se esté obteniendo un buen aprendizaje, deberíamos parar el entrenamiento y volver a la fase de diseño. Hay diferentes formas de evaluar el aprendizaje durante la fase de entrenamiento. Una forma sencilla es la siguiente: en un porcentaje de episodios de entrenamiento (por ejemplo, en uno de cada 10), se desactiva la opción $\epsilon$-greedy y se toman todas las acciones del episodio en base a la tabla Q (se evitan las acciones aleatorias). Mientras se hace eso, se calcula la recompensa total del episodio.
+ Efectivamente, es necesario saber qué esta pasando en cada episodio durante el entrenamiento. En caso contrario, iremos ``a ciegas''. Cuando nos enfrentamos a problemas de aprendizaje más complejos, \textbf{es vital que sepamos si efectivamente se está produciendo algún tipo de aprendizaje, pues durante el entrenamiento se está utilizando tiempo de cómputo y energía (ambos valiosos)}. En caso de que sospechemos que no se esté obteniendo un buen aprendizaje, deberíamos parar el entrenamiento y volver a la fase de diseño. Hay diferentes formas de evaluar el aprendizaje durante la fase de entrenamiento. \textbf{Una forma sencilla es la siguiente}: en un porcentaje de episodios de entrenamiento (por ejemplo, en uno de cada 10), se desactiva la opción $\epsilon$-greedy y se toman todas las acciones del episodio en base a la tabla Q (se evitan las acciones aleatorias). Mientras se hace eso, se calcula la recompensa total del episodio.
 
 
 
@@ -1022,7 +1023,7 @@ Se desea medir el aprendizaje durante los diferentes episodios de entrenamiento.
     \item Cree una método denominado \texttt{self.inline\_test()} en la clase \texttt{QLearning}. 
     \item En el método de train, cada 10 episodios de entrenamiento el método \texttt{self.inline\_test()} deberá ejecutar 10 episodios de test. La función debe devolver \textbf{la recompensa media de esos 10 episodios}, pues el resultado de cada test puede ser diferente.
     \item En cada test \textit{inline}, solamente se explota el conocimiento inherente a Q (no se toman acciones aleatorias).
-    \item En el método train se debe guardar el resultado de cada llamada a \texttt{self.inline\_test()}. Se debe devolver la lista.
+    \item En el método train se debe guardar el resultado de cada llamada a \texttt{self.inline\_test()}. Se debe devolver la lista con el resultado de cada test y calcular el resultado medio.
      \item Plotee los resultados al finalizar el entrenamiento.
 \end{itemize}
 Haga:
@@ -1048,7 +1049,7 @@ def train_qlearning():
 %Toda la funcionalidad para representar los experimentos la encontrarás en el script \texttt{taxi\_q\_learning\_train\_graphs.py}. Tendrás únicamente que modificar el método \texttt{train} de la clase \texttt{QLearning()} para guardar la recompensa total en los episodios que exploten Q.
 \end{exercise}
 
-Se muestra en la figura \ref{fig:inline_tests_0.5_1.0} el resultado Un resultado típico de un entrenamiento de 2000 episodios con $\alpha=0.5$ y $\gamma=1.0$, usando una función de $\epsilon$ geométrica 25/75. Vemos cómo aumenta la recompensa media (medido con un \textit{inline test}). Hacia los episodios finales la recompensa media se estabiliza, acabando en valores positivos que resuelven el problema del entorno Taxi. Un resultado peor se obtiene con $\alpha=0.1$ y $\gamma=1.0$ (figura \ref{fig:inline_tests_0.1_1.0}).
+Se muestra en la figura \ref{fig:inline_tests_0.5_1.0} un resultado típico de un entrenamiento de 2000 episodios con $\alpha=0.5$ y $\gamma=1.0$, usando una función de $\epsilon$ geométrica 25/75. Vemos cómo aumenta la recompensa media (medido con un \textit{inline test}). Hacia los episodios finales la recompensa media se estabiliza, acabando en valores positivos que resuelven el problema del entorno Taxi. Un resultado peor se obtiene con $\alpha=0.1$ y $\gamma=1.0$ (figura \ref{fig:inline_tests_0.1_1.0}).
 
 \begin{figure}
     \centering
@@ -1063,12 +1064,12 @@ Se muestra en la figura \ref{fig:inline_tests_0.5_1.0} el resultado Un resultado
     \label{fig:inline_tests_0.1_1.0}
 \end{figure}
 
-Hecha la prueba anterior, posiblemente, no tengamos muy claro cuáles son los parámetros que permiten obtener un mejor aprendizaje del entorno. En general, los valores óptimos de los hiperparámetros dependen fuertemente del entorno. Una forma de hallar los parámetros óptimos para un entorno es realizar varios entrenamientos diferentes del entorno con todas las combinaciones de $\alpha$ y $\gamma$. 
+Hecha la prueba anterior, posiblemente, no tengamos muy claro cuáles son los parámetros que permiten obtener un mejor aprendizaje del entorno. En general, los valores óptimos de los hiperparámetros dependen fuertemente del entorno. Una forma de hallar los parámetros óptimos para un entorno es realizar varios entrenamientos diferentes del entorno con todas las combinaciones de $\alpha$ y $\gamma$ posibles. 
 
 %En la figura \ref{fig:figure_alpha_gamma} se muestra la recompensa total de los episodios de test intermedios para diferentes combinaciones de $\alpha$ y $\gamma$. Es importante darse cuenta de que con algunas combinaciones de $\alpha$ y $\gamma$ el agente no llega a aprender correctamente nunca. Por ejemplo, la combinación $(\alpha, \gamma)=(0.1, 0.1)$ es desastrosa. Aparentemente la configuración $(\alpha, \gamma)=(0.1, 0.9)$ tarda más episodios en aprender que el resto. Finalmente, la mejor combinación parece ser la $(\alpha, \gamma)=(0.5, 0.9)$, que aprende más rápido que la $(\alpha, \gamma)=(0.5, 0.1)$, ambas llegando a valores de recompensa total similares. Nos damos cuenta de que esta gráfica es \textbf{complicada de visualizar cuando tenemos muchos combinaciones diferentes}. Resultaría interesante realizar entrenamientos de 500 episodios y calcular la recompensa media de cada episodio de test intermedio.
 
 \begin{exercise}
-\textbf{EJERCICIO}
+\textbf{EJERCICIO}\\
 Abra el script \texttt{taxi\_q\_learning\_train\_opt.py}. Observe que aquí se plantea algo diferente: 
 \begin{itemize}
     \item Se realiza un entrenamiento con diferentes valores de $\alpha$ y $\gamma$.
