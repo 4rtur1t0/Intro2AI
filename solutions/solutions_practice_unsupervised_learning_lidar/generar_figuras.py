@@ -2,7 +2,7 @@
     Genera las capturas de open3d que usa el guion de la práctica (figures/).
     No forma parte de la práctica del estudiante.
 
-        python generar_figuras.py ../../../Intro2AI_lessons/lesson4-unsupervised-learning-lidar/figures
+        python generar_figuras.py ../../../Intro2AI_lessons/practice_unsupervised-learning-lidar/figures
 """
 import os
 import sys
