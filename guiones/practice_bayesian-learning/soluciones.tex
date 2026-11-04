@@ -181,16 +181,16 @@ Para entrenar no hace falta recorrer las palabras: \texttt{X\_c.sum(axis=0)} da 
 
     \item[c)] \textbf{Frecuente no es indicativo.} Las 10 más frecuentes son casi las mismas en las dos clases: las palabras más comunes del inglés (\texttt{you}, \texttt{to}, \texttt{the}\dots). Como son igual de probables en las dos, $\log P(w \mid \texttt{spam}) - \log P(w \mid \texttt{ham})$ es casi 0, y apenas mueven la decisión: lo que distingue es la diferencia. Indican spam \texttt{claim}, \texttt{prize}, \texttt{150p} (el precio de un SMS de tarificación especial), \texttt{uk}, \texttt{tone} (de los tonos de llamada) y los números; indican \texttt{ham} \texttt{gt} y \texttt{lt} (restos de los códigos HTML \texttt{\&gt;} y \texttt{\&lt;}), \texttt{come}, \texttt{he}, \texttt{she}, \texttt{lor} y \texttt{da} (coloquialismos del inglés de Singapur, de donde viene buena parte de los SMS legítimos). El filtro aprende las peculiaridades de su corpus: con SMS en español no serviría.
 
-    \item[d)] Dos formas, comprobadas con \texttt{filtro.py}:
-    \begin{itemize}
-        \item \textbf{Palabras que no conoce.} En
-        \begin{flushleft}\small\texttt{C0ngratulati0ns! U h4ve w0n a FR33 pr1ze. C4ll n0w 2 cl4im}\end{flushleft}
-        no hay ninguna palabra del vocabulario (\texttt{U}, \texttt{a} y \texttt{2} tienen un solo carácter), así que no cuenta ninguna, y queda $P(\texttt{spam} \mid \text{mensaje}) = P(\texttt{spam}) = 0{,}134$: \texttt{ham}. Es lo que hacen los spammers al escribir \textit{V1AGRA}: una palabra que no se vio al entrenar se ignora.
-        \item \textbf{Palabras de \texttt{ham}.} El mensaje
-        \begin{flushleft}\small\texttt{Congratulations! You have won a free prize, call now to claim it. Sorry lor, I will come later da}\end{flushleft}
-        tiene todo el spam (\texttt{claim} $+5{,}54$, \texttt{prize} $+5{,}34$\dots), pero queda en $P(\texttt{spam}) = 0{,}02$, porque las palabras de \texttt{ham} lo compensan (\texttt{come} $-4{,}13$, \texttt{lor} $-3{,}82$, \texttt{da} $-3{,}72$, \texttt{later} $-3{,}72$, \texttt{sorry} $-2{,}44$). Naïve Bayes suma la evidencia de cada palabra por separado: basta con añadir suficientes palabras de la otra clase.
-    \end{itemize}
-    Es un ejemplo sencillo de \textbf{ataque adversario} a un modelo de aprendizaje automático. Los filtros de verdad se defienden reentrenándose con el spam nuevo y mirando más cosas que las palabras: el remitente, los enlaces\dots
+    % \item[d)] Dos formas, comprobadas con \texttt{filtro.py}:
+    % \begin{itemize}
+    %     \item \textbf{Palabras que no conoce.} En
+    %     \begin{flushleft}\small\texttt{C0ngratulati0ns! U h4ve w0n a FR33 pr1ze. C4ll n0w 2 cl4im}\end{flushleft}
+    %     no hay ninguna palabra del vocabulario (\texttt{U}, \texttt{a} y \texttt{2} tienen un solo carácter), así que no cuenta ninguna, y queda $P(\texttt{spam} \mid \text{mensaje}) = P(\texttt{spam}) = 0{,}134$: \texttt{ham}. Es lo que hacen los spammers al escribir \textit{V1AGRA}: una palabra que no se vio al entrenar se ignora.
+    %     \item \textbf{Palabras de \texttt{ham}.} El mensaje
+    %     \begin{flushleft}\small\texttt{Congratulations! You have won a free prize, call now to claim it. Sorry lor, I will come later da}\end{flushleft}
+    %     tiene todo el spam (\texttt{claim} $+5{,}54$, \texttt{prize} $+5{,}34$\dots), pero queda en $P(\texttt{spam}) = 0{,}02$, porque las palabras de \texttt{ham} lo compensan (\texttt{come} $-4{,}13$, \texttt{lor} $-3{,}82$, \texttt{da} $-3{,}72$, \texttt{later} $-3{,}72$, \texttt{sorry} $-2{,}44$). Naïve Bayes suma la evidencia de cada palabra por separado: basta con añadir suficientes palabras de la otra clase.
+    % \end{itemize}
+    % Es un ejemplo sencillo de \textbf{ataque adversario} a un modelo de aprendizaje automático. Los filtros de verdad se defienden reentrenándose con el spam nuevo y mirando más cosas que las palabras: el remitente, los enlaces\dots
 \end{enumerate}
 
 \end{document}
