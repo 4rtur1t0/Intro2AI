@@ -39,7 +39,7 @@ Cada rama local se actualiza con `git pull` en el paso que le toca.
 git checkout develop
 git pull
 # ... editar y probar ...
-git add <ficheros>
+git add <ficheros> # todos los ficheros con git add .
 git commit -m "Descripción del cambio"
 git push origin develop
 ```
