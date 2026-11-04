@@ -97,10 +97,10 @@ def prueba():
     matriz = matriz_de_confusion(y_test, y_pred, NUM_CLASES)
     escribir_matriz_de_confusion(matriz, CLASES)
     precision, exhaustividad = precision_exhaustividad(matriz)
-    print('Spam: precisión = %.4f   exhaustividad = %.4f' % (precision, exhaustividad))
+    print('Spam: precisión = %.4f   accuracy = %.4f' % (precision, exhaustividad))
     comprobar('tasa de acierto en los SMS de prueba', round(acierto, 4), 0.9792)
     comprobar('matriz de confusión', matriz.tolist(), [[1199, 8], [21, 166]])
-    comprobar('precisión y exhaustividad del spam',
+    comprobar('precisión y accuracy del spam',
               [round(precision, 4), round(exhaustividad, 4)], [0.954, 0.8877])
 
     referencia = MultinomialNB(alpha=1.0).fit(X_train, y_train)
