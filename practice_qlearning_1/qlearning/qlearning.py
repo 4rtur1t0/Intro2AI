@@ -31,6 +31,8 @@ class QLearning():
     def train(self, total_episodes):
         self.results = []
         print('Training started!', flush=True)
+        # Ací teniu un objecte de la classe epsilon_greedy de tipus geomètric, per a actualitzar automàticament el valor
+        # d'epsilon
         epsilon_greedy = EpsilonGreedyGeom(epsilon_max=self.epsilon_max,
                                        epsilon_min=self.epsilon_min,
                                        total_episodes=total_episodes,
@@ -49,7 +51,7 @@ class QLearning():
         # EJERCICIO 6.4: CALCULE LA ACTUALIZACIÓN DE Q-table usando la ecuación de Bellman
         #################################################
         # self.q_table[state, action] =
-        raise NotImplementedError('EJERCICIO 6.3 sin completar: debe completar QLearning.train()')
+        raise NotImplementedError('EJERCICIO 6.4 sin completar: debe completar QLearning.train()')
         return
 
     def test(self, total_episodes, save_results=False):
@@ -79,15 +81,25 @@ class QLearning():
 
     def inline_test(self, episode, epsilon_greedy):
         # DEBE SER COMPLETADO POR EL ESTUDIANTE
+        raise NotImplementedError('EJERCICIO 6.4 sin completar: debe completar QLearning.train()')
         return
 
     def create_random_q_table(self):
+        """
+        Creates a random Q-table
+        """
         self.q_table = np.random.rand(self.state_size, self.action_size)
 
     def read_q_table(self, filename):
+        """
+        Reads a Q-table from a file (caution) numpy binary format.
+        """
         with open(filename, 'rb') as f:
             self.q_table = np.load(f)
 
     def save_q_table(self, filename):
+        """
+        Saves a Q-table to a file (caution) numpy binary format.
+        """
         with open(filename, 'wb') as f:
             np.save(f, self.q_table)

@@ -23,7 +23,7 @@ def train_qlearning():
         environment = gym.make('Taxi-v3', render_mode=render_mode)
     except:
         environment = gym.make('Taxi-v4', render_mode=render_mode)
-    params = {'alpha': 0.9, 'gamma': 0.1}
+    params = {'alpha': 0.5, 'gamma': 0.5}
     qlearning = QLearning(environment=environment, params=params)
     print('LET US LEARN NOW!')
     results = qlearning.train(total_episodes=10000)
