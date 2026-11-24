@@ -1,8 +1,17 @@
 from qlearning_discrete.qlearning_discrete import QLearningD
 import gymnasium as gym
+import matplotlib.pyplot as plt
+
+def plot_results(rewards_test):
+    plt.plot(rewards_test)
+    plt.title('Rewards')
+    plt.xlabel('Episodes')
+    plt.ylabel('Rewards')
+    plt.show()
 
 def test_qlearning():
-    render_mode = None #'human'
+    # render_mode = None
+    render_mode = 'human'
     episodes_test = 200
     try:
         environment = gym.make("LunarLander-v3", render_mode=render_mode)
@@ -12,8 +21,7 @@ def test_qlearning():
     qlearningd.read_model(filename='qtable_lunar_lander.pkl')
     print('Testing mode!')
     results = qlearningd.test(total_episodes=episodes_test)
-    results.save(experiment_name='test')
-    results.plot()
+    plot_results(results)
 
 if __name__ == "__main__":
     test_qlearning()
