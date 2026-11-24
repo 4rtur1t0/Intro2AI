@@ -6,7 +6,7 @@ def train_deep_qlearning():
         environment = gym.make("LunarLander-v3")
     except Exception:
         environment = gym.make("LunarLander-v2")
-    total_episodes_train = 100
+    total_episodes_train = 3000
     params = {'gamma': 0.99,
               'epsilon_percentage': 0.25,
               'hidden_layer_sizes': (64, 64),

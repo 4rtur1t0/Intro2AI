@@ -35,7 +35,13 @@
 \maketitle
 
 \section{Introducción}
-Con esta práctica se complementan los conceptos vistos en el área de Q-learning. En concreto, debemos comenzar recordando la principal limitación del algoritmo Q-learning: ``el problema de la alta dimensionalidad de los datos''. En la práctica anterior vimos claramente que el problema de aprendizaje se complicaba cuando las dimensiones de la tabla $Q(s, a)$ crecían. Por otra parte, también debemos notar que en la misma práctica de \textit{reinforcement learning} se resolvían problemas donde el estado y las acciones eran de naturaleza discreta.
+Con esta práctica se complementan los conceptos vistos en el área de Q-learning. En concreto, debemos comenzar recordando las principales limitaciones del algoritmo Q-learning:
+\begin{itemize}
+	\item  El problema de la alta dimensionalidad de los datos. Si tenemos un problema con un gran número de estados y de acciones posibles, la tabla Q crece exponencialmente y resulta más difícil estimarla.
+	\item Tener estados o acciones continuos. El algoritmo Q-learning considera que el estado y las recompensas futuras de las acciones se pueden almacenar en una tabla, pero: ¿cómo representamos una variable continua (el estado o las acciones) en una tabla? 
+\end{itemize}
+
+ En la práctica anterior vimos claramente que el problema de aprendizaje se complicaba cuando las dimensiones de la tabla $Q(s, a)$ crecían. Por otra parte, también debemos notar que en la misma práctica de \textit{reinforcement learning} se resolvían problemas donde el estado y las acciones eran de naturaleza discreta.
 
 \textbf{Resumen de la práctica}: en esta práctica se presentará inicialmente una solución de Q-learning  para el caso discreto, que utiliza una discretización directa del estado. El estudiante experimentará esta solución utilizando un simulador de  \textit{módulo lunar}. A continuación, se observará las limitaciones de Q-learning para resolver el problema (debido al problema de la su alta dimensionalidad). Se introduce en esta práctica una variación de esta solución que intenta evitar la estimación directa de una tabla Q: Deep Q Learning. En esta solución, se reemplaza la tabla Q por una red neuronal que se estimará en base al estado, acciones y recompensas en cada instante recibidas por el agente. En resumen, veremos estas dos técnicas y las aplicaremos al mismo problema:
 \begin{itemize}
@@ -98,12 +104,9 @@ El episodio finaliza si:
 \end{itemize}
 
 
-\begin{exercise}
-    Intente aterrizar el módulo lunar. Ejecute el script \texttt{lunar\_lander\_test\_human.py} (práctica de  Q-learning II, parte A). Anote sus estadísticas sobre 20 intentos de aterrizaje. ¿Cuál es la recompensa media obtenida? ¿Se ha conseguido aterrizar en alguna ocasión?
-\end{exercise}
 
 \subsection{Recompensas}
-En cada paso de simulación se recibe una recompensa. La forma en la que se recibe la recompensa es un poco diferente a lo que hemos visto hasta ahora. Para calcular la recompensa, gymnasium comienza planteando una valoración global $K_t$, basada en el vector de estado:
+En cada paso de simulación se recibe una recompensa. La forma en la que se recibe la recompensa es un poco diferente a lo que hemos visto hasta ahora. Para calcular la recompensa, \texttt{gymnasium} comienza planteando una valoración global $K_t$, basada en el vector de estado:
 $$\text{K}_t = -100 \sqrt{x^2 + y^2} - 100 \sqrt{v_x^2 + v_y^2} - 100 \vert{}\theta\vert{} + 10 \cdot \text{l}_1 + 10 \cdot \text{l}_2$$
 
 La posición $(x, y)$ se mide de forma relativa al centro de la plataforma de aterrizaje y el ángulo $\theta$ se mide respecto de la vertical. Los valores discretos $l_1$ y $l_2$ toman valores de 1 o 0 en función de si la pata toca el suelo.  La recompensa $r_t$ no se calcula de forma absoluta, sino como la diferencia en el valor de $K$ entre dos instantes de tiempo:
@@ -115,11 +118,12 @@ Sobre la recompensa $r_t$ se resta un valor $0.3$ si se usa el motor principal y
 \begin{itemize}
     \item La recompensa aumenta si el módulo lunar se acerca al centro de la plataforma de aterrizaje (disminuye, en caso contrario).
     \item La recompensa aumenta cuando el lunar \textit{lander} se mueve más despacio (disminuye, si se mueve más rápido).
-    \item La recompensa disminuye cuando el \textit{lander} se inclina más (aumenta cuando el \textit{lander} se acerca a $\theta = 0$ $ (rad)$).
+    \item La recompensa disminuye cuando el \textit{lander} se inclina más (aumenta cuando el \textit{lander} se acerca a $\theta = 0$ $ rad$).
     \item Se incrementa con 10 puntos con cada pata que entre en contacto con el suelo.
+    \item Disminuye si se usa el impulsor inferior o bien los laterales, con el propósito de incentivar el ahorro de combustible.
 \end{itemize}
 
-Dada la naturaleza acumulativa de la recompensa, tenemos que la recompensa total es: $\sum_{t=1}^Tr_t=\sum_{t=1}^T \text{K}_t - \text{K}_{t-1} = \text{K}_T - \text{K}_0$. Así pues, moverse desde la parte superior de la pantalla (con $\text{K}_0 \approx -100 \text{ a } -140$) hasta la plataforma de aterrizaje (con $\text{K}_T \approx +20$) da una recompensa total de +100 a +140 puntos por cada episodio finalizado correctamente. El episodio recibe una recompensa adicional de -100 o +100 puntos en caso de que se estrelle contra el suelo o aterrice de forma segura, respectivamente. Se considera que un episodio es una solución satisfactoria si consigue, por lo menos, 200 puntos.
+Dada la naturaleza acumulativa de la recompensa, tenemos que la recompensa total es: $\sum_{t=1}^Tr_t=\sum_{t=1}^T \text{K}_t - \text{K}_{t-1} = \text{K}_T - \text{K}_0$. Así pues, moverse desde la parte superior de la pantalla (con $\text{K}_0 \approx -120$) hasta la plataforma de aterrizaje (con $\text{K}_T \approx +20$) da una recompensa total de +100 puntos por cada episodio finalizado correctamente. El episodio recibe una recompensa adicional de -100 o +100 puntos en caso de que se estrelle contra el suelo o aterrice de forma segura, respectivamente. Se considera que un episodio es una solución satisfactoria si consigue, por lo menos, 200 puntos.
 
 
 
@@ -128,11 +132,11 @@ Esta forma de diseñar la recompensa tiene, como principal ventaja, que se previ
 \subsection{Recompensas (bis)}
 Nos damos cuenta de que las recompensas en este entorno están diseñadas de una forma muy diferente al problema del \textit{Taxi} (o \textit{Cliff Walking}). Recordemos que en esos casos, básicamente, se daba una recompensa alta cuando el agente cumplía la misión y se daba una recompensa baja y negativa en cada paso del episodio. En este caso, la variación en la recompensa ya le da pistas al agente de qué es más efectivo para poder aterrizar el aparato en el lugar designado.
 
-En el caso del lunar \textit{lander}, es importante fijarse en que el estado está formado por una serie de variables continuas. En este caso, nos damos cuenta de que, si diéramos una recompensa de, por ejemplo, $+100$ cuando se aterriza correctamente y una recompensa de $-1$ en cada paso del episodio, las probabilidades de que tuviéramos una secuencia de comandos sobre los motores que produjera un aterrizaje exitoso sería prácticamente nula. Y también al contrario, si el \textit{lander} se estrella después de 200 pasos del episodio, ¿cómo podemos determinar si se tomó una acción en un determinado momento que produjo que se descontrolara la aeronave? (por ejemplo, dar la vuelta a la aeronave hacia abajo, al haber accionado demasiado el motor derecho).
+En el caso del lunar \textit{lander}, es importante fijarse en que el estado está formado por una serie de variables continuas. En este caso, nos damos cuenta de que, si diéramos una recompensa de, por ejemplo, $+100$ cuando se aterriza correctamente y una recompensa de $-1$ en cada paso del episodio, \textbf{las probabilidades de que tuviéramos una secuencia de comandos sobre los motores que produjera un aterrizaje exitoso sería prácticamente nula}. Y también al contrario, si el \textit{lander} se estrella después de 200 pasos del episodio, ¿cómo podemos determinar si se tomó una acción en un determinado momento que produjo que se descontrolara la aeronave? (por ejemplo, dar la vuelta a la aeronave hacia abajo, al haber accionado demasiado el motor derecho).
 
 
 \subsection{Gravedad}
-Extrañamente, encontraréis que el parámetro de gravedad que se indica por defecto en el entorno es $g=-10m/s^2$. Sobre la superficie de la luna, un objeto debería sufrir una aceleración de $g=-1,62m/s^2$. Este parámetro no es demasiado relevante, pues con cualquiera de estos valores se se trata de un entorno difícil de controlar. Si seleccionamos $g=-10m/s^2$ (valor por defecto en \textit{gymnasium}, realmente, estaremos simulando algo parecido al LLRV\footnote{\url{https://en.wikipedia.org/wiki/Lunar_Landing_Research_Vehicle}} (figura \ref{fig:LLRV}), utilizado por los intrépidos pilotos del programa \textit{Apollo} para ensayar las maniobras de aterrizaje sobre la luna (sí: ensayaban y aprendían en un entorno diferente... con diferente aceleración, claro está). También se permite introducir un parámetro de velocidad de viento en el entorno, que dificulta todavía más la tarea. 
+Extrañamente, encontraréis que el parámetro de gravedad que se indica por defecto en el entorno es $g=-10m/s^2$. Sobre la superficie de la luna, un objeto debería sufrir una aceleración de $g=-1,62m/s^2$. Este parámetro no es demasiado relevante, pues con independencia de su valor, ya es un sistema difícil de controlar. Si seleccionamos $g=-10m/s^2$ (valor por defecto en \textit{gymnasium}, realmente, estaremos simulando algo parecido al LLRV\footnote{\url{https://en.wikipedia.org/wiki/Lunar_Landing_Research_Vehicle}} (figura \ref{fig:LLRV}), utilizado por los intrépidos pilotos del programa \textit{Apollo} para ensayar las maniobras de aterrizaje sobre la luna (sí: ensayaban y aprendían en un entorno diferente... con diferente aceleración, claro está). También se permite introducir un parámetro de velocidad de viento en el entorno, que dificulta todavía más la tarea. 
 
 \begin{figure}
     \centering
@@ -185,16 +189,22 @@ $s^*_{t} = (3, 4, 5, 5, 3, 2, 0, 1)$.
 %Por ejemplo, considere que $x=0.55m$ en un determinado instante, la función de discretización le asignará un valor de 7.
 
 
-\begin{exercise}
-    ¿Después de la discretización propuesta, cuántos estados diferentes se pueden codificar? Compare el resultado con el número de estados en el caso de los entornos Taxi y Cliff Walking.
-\end{exercise}
+%\begin{exercise}
+%    ¿Después de la discretización propuesta, cuántos estados diferentes se pueden codificar? Compare el resultado con el número de estados en el caso de los entornos Taxi y Cliff Walking.
+%\end{exercise}
 
 En efecto, estamos discretizando de forma variable cada una de las partes del estado $s_t$. Por ejemplo, $x$ se discretiza en 7 \textit{bins} diferentes, $y$ en 5 intervalos diferentes, $v_x$ en 7, ... etc. Estas divisiones (\textit{bins}) se han elegido con mucha cautela, buscando reducir el número total de estados en la tabla Q. Con todo esto, en total tendremos un número total de posibles estados discretos considerablemente grande:
 $$\text{Número de estados totales} = 7 \times 5 \times 7 \times 6 \times 7 \times 5 \times 2 \times 2=\mathbf{205.800}$$
 
-\begin{exercise}
-    Vaya al método \texttt{train} de la clase QLearningD y observe en qué puntos se hace la discretización y justifique por qué.
-\end{exercise}
+%\begin{exercise}
+%    Vaya al método \texttt{train} de la clase QLearningD y observe en qué puntos se %hace la discretización y justifique por qué.
+%\end{exercise}
+
+\subsection{Estrategia $\epsilon$-greedy}
+En este caso se utiliza una estrategia para $\epsilon$ geométrica 25/75. Se pueden hacer variaciones sobre la ratio anterior, aunque el resultado sobre el aprendizaje es muy complejo de evaluar.
+%En este caso, se plantea hacer una simplificación para la variación de $\epsilon$. Se plantea que durante el 80\% de los episodios, se haga una disminución lineal de $\epsilon$, para mantenerlo a un valor mínimo durante el resto de episodios.
+
+
 
 \subsection{Diccionarios}
 Python permite guardar la tabla $Q$ en un diccionario en vez de en un array. Es importante pensar que se debe almacenar el valor de $Q(s_t, a_t)$: dado un estado $s_t$ hay que almacenar 4 posibles acciones.
@@ -204,87 +214,187 @@ En el código que se proporciona al estudiante, se usa la siguiente línea para 
 \begin{verbatim}
     self.q_table = defaultdict(lambda: np.zeros(self.action_size))
 \end{verbatim}
-En esencia, en las líneas anteriores se define el uso de un diccionario de python. El diccionario de tipo {\textttdefaultdict} es especialmente rápido. Esto quiere decir que se usa un diccionario de python para almacenar el estado. La clave de cada elemento será una combinación del estado (un hash) y para cada clave se guardarán los 4 valores de la tabla, para cada acción. La sintaxis con \texttt{lambda: np.zeros(self.action\_size)} dice que se devuelva un array de 4 ceros cuando se intenta consultar un estado que no existe. El ahorro de memoria al usar defaultdict es importante, pues no todos los estados se visitan durante el aprendizaje o el test. Piense que seguramente no se visiten nunca algunas combinaciones extremas del estado. 
+En esencia, en las líneas anteriores se define el uso de un diccionario de python. El diccionario de tipo \texttt{defaultdict} es especialmente rápido. Esto quiere decir que se usa un diccionario de python para almacenar el estado. La clave de cada elemento será una combinación del estado (un hash) y para cada clave se guardarán los 4 valores de la tabla, para cada acción. La sintaxis con \texttt{lambda: np.zeros(self.action\_size)} dice que se devuelva un array de 4 ceros cuando se intenta consultar un estado que no existe. El ahorro de memoria al usar defaultdict es importante, pues no todos los estados se visitan durante el aprendizaje o el test. Piense que seguramente no se visiten nunca algunas combinaciones extremas del estado. 
+
+
+\subsection{¿Está aprendiendo el agente?}
+En vuestra vida profesional os enfrentaréis, con frecuencia, a algoritmos que requieren una gran cantidad de tiempo para poder alcanzar buenos resultados. Los algoritmos de aprendizaje que se os presentan aquí son un ejemplo. 
+
+En los algoritmos de esta práctica se ha incluido una barra de avance de la librería \texttt{tqdm} de python (\texttt{pip install tqdm}. En la barra vereis, fácilmente:
+\begin{itemize}
+	\item El porcentaje de compleción de la tarea.
+	\item Una barra visual.
+	\item La iteración actual (e. g. 1543/5000).
+	\item Tiempo transcurrido y tiempo restante (\textit{elapsed/remaining}).
+	\item El tiempo por iteración.
+\end{itemize}
+
+Mientras veis la barra avanzar lentamente, debéis pensar:
+\begin{itemize}
+	\item Los parámetros $\alpha$ y $\gamma$ son correctos y óptimos para el aprendizaje.
+	\item ¿Debería estar entrenando 10.000 pasos de entrenamiento más? ¿o 100.000?
+	\item ¿La estrategia $\epsilon$-greedy es la correcta?
+\end{itemize}
+Te atenazan las dudas y paras el entrenamiento, a continuación, cambas $\alpha$ y $\gamma$ y ejecuts de nuevo el \textit{script}. Repites esto varias veces. Finalmente, no estás seguro de qué hacer... La respuesta es básica: debes medir el aprendizaje del agente. Para hacer esto, se os propone:
+\begin{itemize}
+	\item \textbf{Medir la recompensa de cada iteración del bucle de aprendizaje.} Tened en cuenta que en algunas de esas iteraciones se toman acciones aleatorias, con lo que esta recompensa tiene un ruido inherente y no mide solamente el aprendizaje de la tabla $Q$.
+	\item Durante el entrenamiento, lanzar el script de test y guardar la recompensa. Nótese que el resultado de cada test depende enormemente de la ``suerte'' que hayamos tenido en el estado inicial del \textit{lunar lander}. Así pues, es recomendable repetir el test varias veces. Por ejemplo, cada 1000 iteraciones de entrenamiento podemos lanzar el test 50 veces y calcular un valor medio.	
+\end{itemize}
+
+
+
 
 \section{Actividades}
 Se proporciona al estudiante el código de la versión discretizada de Q-Learning. A continuación se proponen una serie de ejercicios.
 
-\begin{exercise}
-    Ejecute un entrenamiento de, al menos 5000 episodios (\texttt{lunar\_lander\_train.py} (Q-learning II, parte A). Utilice $\alpha=0.5$ y $\gamma=1.0$. Observará que, al acabar el entrenamiento, aparecen unos resultados parecidos a los de la figura \ref{fig:lunar_lander_first_train}. En la figura se observa:
-    \begin{itemize}
-        %\item La recompensa total de cada episodio.
-        %item La recompensa media de 100 episodios (media móvil).
-        \item La recompensa media del test inline cada 50 episodios.
-        \item El valor de $\epsilon$ (100$\times$).
-        %\item El número de estados visitados (1000$\times$).
-    \end{itemize}
-    ¿Qué conclusiones se pueden extraer?\\
-    \textbf{IMPORTANTE}: observe que, tras el entrenamiento, se guarda un fichero pickle que contiene el diccionario de la tabla Q. Este fichero se leerá posteriormente en el script de test.
-\end{exercise}
-Un posible resultado del anterior script lo vemos en la figura \ref{fig:lunar_lander_first_train}.
-Vemos que el aprendizaje es lento (vemos que la curva de la recompensa media sube poco a poco). También vemos que el aprendizaje no es del todo consistente: se obtiene, por ejemplo, una recompensa media de -150 en el episodio 800 de entrenamiento que baja a -250 en el episodio 1000.
-
-%Vemos que la recompensa media sube correctamente en los primeros episodios, pero se queda atascada después. Nos fijamos, también, que los estados visitados son escasos, respecto del total de estados. Se propone hacer que $\epsilon$ decaiga más despacio.
-
-\begin{figure}
-    \centering
-    \includegraphics[width=0.8\linewidth]{figures/lunar_lander_first_train.png}
-    \caption{Resultado de un entrenamiento inicial del lunar lander (Q-learning discreto).}
-    \label{fig:lunar_lander_first_train}
-\end{figure}
 
 \begin{exercise}
-    Ejecute el método de test (script \texttt{lunar\_lander\_test.py}). Observe el comportamiento del agente. ¿Se consigue completar la tarea siempre?
-\end{exercise}
-Tras ejecutar el test en modo visual, observamos que en algunos casos se resuelve correctamente el episodio (la recompensa es mayor de 200) y en muchos casos no.
-
-\subsection{Estrategia $\epsilon$-greedy}
-En este caso se utiliza una estrategia para $\epsilon$ geométrica 25/75. Se pueden hacer variaciones sobre la ratio anterior, aunque el resultado sobre el aprendizaje es muy complejo de evaluar.
-%En este caso, se plantea hacer una simplificación para la variación de $\epsilon$. Se plantea que durante el 80\% de los episodios, se haga una disminución lineal de $\epsilon$, para mantenerlo a un valor mínimo durante el resto de episodios.
-
-
-
-\subsection{Manejo y visualización de resultados}
-En el script de entrenamiento se ha incluido una función \texttt{save\_results} que guarda los resultados a un fichero \texttt{.json} (directorio \texttt{results}). Cada vez que se ejecuta el script de \texttt{train}, se guarda un nuevo fichero en función de los hiperparámetros $\gamma$ y $\alpha$. En cualquier momento podrá ejecutar el script \texttt{plot\_results} para observar los resultados de diferentes experimentos en un navegador web (abra el fichero .html). Esto nos va a permitir probar con diferentes valores de los hiperparámetros y observar qué diferencias hay en el aprendizaje.
-
-\begin{exercise}
-Haga pruebas con diferentes valores de $\alpha$ y $\gamma$ y $\delta$ (decay rate de $\epsilon$). Indique con qué parámetros se produce un mejor aprendizaje. Pruebe con valores de $\alpha$ entre 0.1 y 1.0. Varíe los valores de $\gamma$ entre 0.1 y 1.0. Utilice un número de episodios que no sea excesivo para poder realizar las pruebas (2000). \textbf{Una vez tenga una configuración que considere óptima, aumente el número de episodios e intente obtener un resultado final del aprendizaje con Q-learning tabular discretizado.}
+    Intente aterrizar el módulo lunar. Ejecute el script \texttt{lunar\_lander\_test\_human.py} (práctica de  Q-learning II, parte A). Anote sus estadísticas sobre 20 intentos de aterrizaje. ¿Se ha conseguido aterrizar en alguna ocasión entre las banderas?
 \end{exercise}
 
-Al realizar los experimentos anteriores, nos tenemos que dar cuenta de la gran variabilidad de los resultados: nos debemos fijar en la media de la recompensa obtenida, pero también en la varianza de los resultados. Así pues, es necesario:
+
+\begin{exercise}[breakable]
+Nos planteamos ahora entrenar el algoritmo de Q-learning discreto. El algoritmo se ha descrito en detalle los apartados anteriores.
+\\
+\textbf{EJERCICIO}
 \begin{itemize}
-    \item Fijar unos parámetros de $\alpha$ y $\gamma$.
-    \item Repetir varias veces el entrenamiento y test con esos parámetros.
-    \item Guardar los datos para revisarlos posteriormente.
+\item Ejecute el script \texttt{lunar\_lander\_train.py} (práctica de  Q-learning II, parte A). 
+\item Ejecute el script \texttt{lunar\_lander\_test.py} (práctica de  Q-learning II, parte A). 
 \end{itemize}
 
-Este proceso es muy costoso computacionalmente. En la figura \ref{fig:results_discrete_total_episodes_15000_5_repetitions} se presenta el resultado de variar  $\alpha$ y $\gamma$ (con 5 repeticiones) con entrenamientos de 15.000 episodios (se empleó el script \texttt{lunar\_lander\_train\_opt.py}). Vemos que los parámetros $\alpha=0.5$ y $\gamma=1.0$ son los que permiten un aprendizaje mejor.  Con esto, para poder obtener un aprendizaje relevante, debemos entrenar, como mínimo, unos 15.000 episodios con estos parámetros. 
+¿Se consiguen buenos resultados?
+
+\end{exercise}
+
+\textbf{¡No sabemos si se consiguen buenos resultados, pues no se están midiendo!} En el próximo ejercicio almacenaremos las recompensas y mediremos la calidad del aprendizaje.
+
+
+\begin{exercise}[breakable]
+Durante el entrenamiento se debe medir el aprendizaje. Para ello:
+\begin{itemize}
+	\item \textbf{Mida la recompensa de cada iteración del bucle de aprendizaje de \texttt{self.train}.} Tened en cuenta que en algunas de esas iteraciones se toman acciones aleatorias, con lo que esta recompensa tiene un ruido inherente y no mide solamente el aprendizaje de la tabla $Q$.
+	\item Durante el entrenamiento, cada cierto número de iteraciones de aprendizaje, se debe lanzar \texttt{self.test} varias veces y calcular el valor medio. Por ejemplo, cada 1000 iteraciones de entrenamiento podemos lanzar el test 50 veces y calcular un valor medio.	Así pues, \texttt{self.test} tiene que devolver las recompensas que se promediarán y guardarán en \texttt{self.train}.
+\end{itemize}
+\textbf{EJERCICIO}
+\begin{itemize}
+	\item En \texttt{self.train}: calcule y guarde el reward durante cada episodio de entrenamiento en la lista \texttt{rewards\_train}.
+	\item En \texttt{self.test}: calcule y guarde el reward durante cada episodio de test en la lista \texttt{rewards\_test}.
+	\item Cada \texttt{self.training\_tests[0]} episodios, llame a \texttt{self.test} y ejecute \texttt{self.training\_tests[1]} episodios. Guarde el valor medio en la lista \texttt{rewards\_inline\_test}.
+	\item Guarde el valor actual de $epsilon$ en la lista \texttt{epsilons}.
+	\item Devuelva \texttt{rewards\_train} \texttt{rewards\_inline\_test} y \texttt{epsilons}.
+	\item En cada iteración del algoritmo debemos mostrar la información en la barra de progreso. 
+\begin{verbatim}
+pbar.set_postfix(mean_train_reward=total_reward, 
+		epsilon=epsilon_greedy.epsilon, 
+		mean_test_reward = rewards_test[-1])
+\end{verbatim}
+\end{itemize}
+Ejecute el script \texttt{lunar\_lander\_train.py}. Si todo ha ido bien, deberías ver una gráfica como la mostrada en la figura \ref{fig:lunar_lander_train}. ¿Podemos asegurar que el agente está aprendiendo?
+\end{exercise}
+
+Vemos que la gráfica recoge 10.000 iteraciones, lo que ha llevado ya algo de tiempo. Mirando con atención, no está muy claro si el agente está aprendiendo. La gráfica superior recoge los resultados durante el entrenamiento. La central el valor de epsilon y la inferior los resultados intermedios de test. En esta última gráfica se puede intuir cierto aprendizaje.
+
+
+\begin{exercise}[breakable]
+Debemos filtrar la información durante y después del entrenamiento:\\
+\textbf{EJERCICIO}
+\begin{itemize}
+	\item Muestre en la barra de progreso el valor medio del Calcule y guarde el reward durante cada episodio de entrenamiento en la lista \texttt{rewards\_train}.
+	\item En el script \texttt{lunar\_lander\_train.py} cambie a la opción \texttt{filter=True}. Esto ejecutará una convolución sobre el resultado, efectivamente haciendo una media de ventana deslizante.
+	\begin{verbatim}
+	plot_results(rewards_train, rewards_inline_test, epsilons, filter=True)	
+	\end{verbatim}
+\end{itemize}
+Ejecute el script \texttt{lunar\_lander\_train.py} con, por lo menos, 15.000 episodios. Si todo ha ido bien, deberías ver una gráfica como la mostrada en la figura \ref{fig:lunar_lander_train2}, donde sí es posible asegurar una tendencia alcista en la recompensa. La barra de progreso deberá mostrar algo parecido a la figura \ref{fig:progress_bar}.
+\end{exercise}
+
+\begin{exercise}[breakable]
+    Ejecute el método de test (script \texttt{lunar\_lander\_test.py}). 
+\begin{itemize}
+\item  Observe el comportamiento del agente (\texttt{mode='human'}). ¿Se consigue completar la tarea siempre?
+\item Observe los resultados de 500 episodios de test (\texttt{mode=None}) en la gráfica. Calcule media y varianza de los resultados.
+\end{itemize}    
+\end{exercise}
+
+Tras ejecutar el test en modo visual, observamos que en algunos casos se resuelve correctamente el episodio (la recompensa es mayor de 200) y en muchos casos no.
+
+\subsection{Parámetros}
+Los parámetros para los cuales se produce un mejor entrenamiento \textbf{se os han dado}. El proceso para averiguar los mejores parámetros es costoso computacionalmente. En la figura \ref{fig:results_discrete_total_episodes_15000_5_repetitions} se presenta el resultado de variar  $\alpha$ y $\gamma$ (con 5 repeticiones) con entrenamientos de 15.000 episodios. Vemos que los parámetros $\alpha=0.5$ y $\gamma=1.0$ son los que permiten un aprendizaje mejor. 
 
 \begin{figure}
     \centering
-    \includegraphics[width=0.8\linewidth]{figures/results_discrete_total_episodes_15000_5_repetitions.png}
+    \includegraphics[width=\linewidth]{figures/lunar_lander_train_discrete.png}
+    \caption{Resultado de un entrenamiento inicial del lunar lander \textbf{sin filtrar} (Q-learning discreto).}
+    \label{fig:lunar_lander_train}
+\end{figure}
+
+\begin{figure}
+    \centering
+    \includegraphics[width=\linewidth]{figures/lunar_lander_train_discrete2.png}
+    \caption{Resultado de un entrenamiento inicial del lunar lander \textbf{filtrado} (Q-learning discreto).}
+    \label{fig:lunar_lander_train2}
+\end{figure}
+
+
+\begin{figure}
+    \centering
+    \includegraphics[width=\linewidth]{figures/results_discrete_total_episodes_15000_5_repetitions.png}
     \caption{Recompensa media al variar $\alpha$ y $\gamma$ en entrenamientos de 15000 episodios (5 repeticiones).}
     \label{fig:results_discrete_total_episodes_15000_5_repetitions}
 \end{figure}
 
-\begin{exercise}
-Una vez tenga una configuración de hiperparámetros que considere óptima, aumente el número de episodios de entrenamiento e intente obtener un resultado final del aprendizaje con Q-learning tabular discretizado. Pruebe el resultado con el script de test. Haga \texttt{render\_mode=None} y lo siguiente para poder probar exhaustivamente el conocimiento adquirido:
-\begin{verbatim}
-    res=qlearningd.test(total_episodes=500)
-    plt.figure()
-    plt.plot(res)
-    plt.xlabel('Episodios')
-    plt.ylabel('Recompensa')
-    plt.title('Recompensa en episodios de test')
-    plt.show()
-\end{verbatim}
-\end{exercise}
-Si hemos hecho todo correctamente, se puede observar que algunos episodios se resuelven correctamente, con recompensas totales altas y cercanas a 200. Sin embargo, hay muchos casos en los que no se consigue aterrizar.
+
+\begin{figure}
+    \centering
+    \includegraphics[width=\linewidth]{figures/progress_bar.png}
+    \caption{Barra de progreso mostrando la información durante el entrenamiento.}
+    \label{fig:progress_bar}
+\end{figure}
+
+
+%\subsection{Manejo y visualización de resultados}
+%En el script de entrenamiento se ha incluido una función \texttt{save\_results} que guarda los resultados a un fichero \texttt{.json} (directorio \texttt{results}). Cada vez que se ejecuta el script de \texttt{train}, se guarda un nuevo fichero en función de los hiperparámetros $\gamma$ y $\alpha$. En cualquier momento podrá ejecutar el script \texttt{plot\_results} para observar los resultados de diferentes experimentos en un navegador web (abra el fichero .html). Esto nos va a permitir probar con diferentes valores de los hiperparámetros y observar qué diferencias hay en el aprendizaje.
+%
+%\begin{exercise}
+%Haga pruebas con diferentes valores de $\alpha$ y $\gamma$ y $\delta$ (decay rate de $\epsilon$). Indique con qué parámetros se produce un mejor aprendizaje. Pruebe con valores de $\alpha$ entre 0.1 y 1.0. Varíe los valores de $\gamma$ entre 0.1 y 1.0. Utilice un número de episodios que no sea excesivo para poder realizar las pruebas (2000). \textbf{Una vez tenga una configuración que considere óptima, aumente el número de episodios e intente obtener un resultado final del aprendizaje con Q-learning tabular discretizado.}
+%\end{exercise}
+%
+%Al realizar los experimentos anteriores, nos tenemos que dar cuenta de la gran variabilidad de los resultados: nos debemos fijar en la media de la recompensa obtenida, pero también en la varianza de los resultados. Así pues, es necesario:
+%\begin{itemize}
+%    \item Fijar unos parámetros de $\alpha$ y $\gamma$.
+%    \item Repetir varias veces el entrenamiento y test con esos parámetros.
+%    \item Guardar los datos para revisarlos posteriormente.
+%\end{itemize}
+%
+%
+%
+%\begin{exercise}
+%Una vez tenga una configuración de hiperparámetros que considere óptima, aumente el número de episodios de entrenamiento e intente obtener un resultado final del aprendizaje con Q-learning tabular discretizado. Pruebe el resultado con el script de test. Haga \texttt{render\_mode=None} y lo siguiente para poder probar exhaustivamente el conocimiento adquirido:
+%\begin{verbatim}
+%    res=qlearningd.test(total_episodes=500)
+%    plt.figure()
+%    plt.plot(res)
+%    plt.xlabel('Episodios')
+%    plt.ylabel('Recompensa')
+%    plt.title('Recompensa en episodios de test')
+%    plt.show()
+%\end{verbatim}
+%\end{exercise}
+%Si hemos hecho todo correctamente, se puede observar que algunos episodios se resuelven correctamente, con recompensas totales altas y cercanas a 200. Sin embargo, hay muchos casos en los que no se consigue aterrizar.
 
 \subsection{Conclusiones}
-El estudiante debe darse cuenta de que usar una técnica de Q-learning tabular no es la mejor solución para este problema. Dado que el estado es continuo, el hecho de haberlo discretizado ha hecho muy complejo el problema, requiriendo un gran número de iteraciones y episodios de entrenamiento para aumentar la inteligencia del agente. Nos hemos dado cuenta, también, de que es vital realizar una buena selección de los parámetros $\alpha$ y $\gamma$ para optimizar el aprendizaje del agente. Igualmente, es vital seleccionar correctamente los intervalos en los que se discretiza el estado. Nos damos cuenta de que también, al haber discretizado el problema, estamos perdiendo precisión a la hora de controlar el \textit{lander}.
+El estudiante debe darse cuenta de que usar una técnica de Q-learning tabular \textbf{no es la mejor solución para este problema}. Dado que el estado es continuo, el hecho de haberlo discretizado ha hecho muy complejo el problema, requiriendo un gran número de iteraciones y episodios de entrenamiento para aumentar la inteligencia del agente (\textbf{esto se os ha dado como dato, para facilitar la práctica}). Nos hemos dado cuenta, también, de que es vital realizar una buena selección de los parámetros $\alpha$ y $\gamma$ para optimizar el aprendizaje del agente. Igualmente, es vital seleccionar correctamente los intervalos en los que se discretiza el estado. Nos damos cuenta de que también, al haber discretizado el problema, estamos perdiendo precisión a la hora de controlar el \textit{lander}.
 
 \textbf{En resumen, y como conclusión principal, debemos ver que el problema del \textit{lunar lander} es muy complejo, debido a la gran cantidad de estados discretos que se han codificado y que el método de Q-learning discretizado está al límite de sus capacidades.} Después del entrenamiento, y durante las pruebas que realicemos, se puede ver que en algunas ocasiones el agente es capaz de aterrizar en la zona designada, pero esto no se consigue de forma consistente. Para mejorar los resultados, se debería hacer una discretización más fina del estado, que conllevaría la necesidad de ejecutar muchos más episodios de entrenamiento. En el apartado siguiente se presentará un método que permite conseguir resultados mucho mejores y con un menor esfuerzo computacional.
+
+
+\begin{figure}
+    \centering
+    \includegraphics[width=\linewidth]{figures/lunar_lander_train_discrete3.png}
+    \caption{Resultados de 30.000 iteraciones con Q-learning discreto. El resultado se ha filtrado.}
+    \label{fig:lunar_lander_train_discrete3}
+\end{figure}
+
 
 
 \section{Deep Q-learning}
