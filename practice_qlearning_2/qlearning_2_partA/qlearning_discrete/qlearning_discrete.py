@@ -83,7 +83,7 @@ class QLearningD():
                                                             self.q_table[state_d][action])
         else:
             # Update Q-table using the Bellman Equation, with Q(s',a)=0
-            self.q_table[state_d][action] = (self.q_table[state_d][action] +\
+            self.q_table[state_d][action] = (self.q_table[state_d][action] + \
                                              self.alpha * (reward - self.q_table[state_d][action]))
 
     def test(self, total_episodes):

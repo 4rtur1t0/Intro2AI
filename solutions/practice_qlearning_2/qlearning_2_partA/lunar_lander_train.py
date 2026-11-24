@@ -26,7 +26,7 @@ def train_qlearning():
         environment = gym.make("LunarLander-v3")
     except Exception:
         environment = gym.make("LunarLander-v2")
-    total_episodes_train = 5000
+    total_episodes_train = 1000
     params = {'gamma': 0.99, 'alpha': 0.5,
               'epsilon_percentage': 0.25, 'training_tests': (100, 10)}
     qlearning = QLearningD(environment=environment, params=params)

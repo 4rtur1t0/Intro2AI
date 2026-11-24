@@ -22,8 +22,6 @@ def test_qlearning():
     print('Testing mode!')
     results = qlearningd.test(total_episodes=episodes_test)
     plot_results(results)
-    # print('Results for test: ', results)
-
 
 if __name__ == "__main__":
     test_qlearning()

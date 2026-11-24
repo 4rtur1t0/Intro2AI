@@ -9,12 +9,12 @@ import pickle
 from collections import deque
 from sklearn.neural_network import MLPRegressor
 import copy
-import json
-import os
-import datetime
+# import json
+# import os
+# import datetime
 from libAI.epsilon_greedy import EpsilonGreedyGeom
-from libAI.results import Results
-
+# from libAI.results import Results
+from tqdm import tqdm
 
 class QLearningDQN():
     def __init__(self, environment, params={}):
@@ -47,20 +47,20 @@ class QLearningDQN():
         self.target_net = copy.deepcopy(self.q_net)
         # El buffer para guardar el mini-batch
         self.replay_buffer = ReplayBuffer(capacity=params.get('replay_buffer_size', 50000))
-        # para guardar resultados
-        self.results = []
-        self.avg_window = 100
 
     def train(self, total_episodes):
-        results_out = Results(type_result='train', params=vars(self))
-        results_running = Results(type_result='train')
         epsilon_greedy = EpsilonGreedyGeom(total_episodes=total_episodes,
                                            epsilon_max=self.epsilon_max,
                                            epsilon_min=self.epsilon_min,
                                            percentage_target=self.epsilon_percentage)
+        epsilons = []
+        rewards_train = []
+        rewards_inline_test = []
+        avg_window = 500
         total_steps = 0
         print("Training DQN with Scikit-Learn MLPRegressor...")
-        for episode in range(total_episodes):
+        pbar = tqdm(range(total_episodes), desc='DQN-learning train')
+        for episode in pbar:
             state, _ = self.env.reset()
             total_reward = 0
             done = False
@@ -78,13 +78,18 @@ class QLearningDQN():
                 total_reward += reward
                 # IMPORTANTE: se entrena la red neuronal online en la train_networks
                 self.train_networks(total_steps=total_steps)
-            # reducimos epsilon
+            rewards_train.append(total_reward)
+            epsilons.append(epsilon_greedy.epsilon)
+            if episode % self.training_tests[0] == 0:
+                rewards_test = self.test(total_episodes=self.training_tests[1])
+                rewards_inline_test.append(np.mean(rewards_test))
+            # Afegeix informació a la barra
+            pbar.set_postfix(mean_train_reward=np.mean(rewards_train[-avg_window:]),
+                             epsilon=epsilon_greedy.epsilon,
+                             mean_test_reward=np.mean(rewards_test))
+            # Reduce epsilon (less exploration, more exploitation as time goes on)
             epsilon_greedy.step()
-            res = self.inline_test(episode)
-            if res is not None: results_out.append_data(episode=episode, total_reward=res[1], epsilon=100*epsilon_greedy.epsilon)
-            results_running.append_data(episode=episode, total_reward=total_reward, epsilon=epsilon_greedy.epsilon)
-            results_running.print_info(flush_each=10)
-        return results_out
+        return rewards_train, rewards_inline_test, epsilons
 
     def train_networks(self, total_steps):
         """
@@ -130,9 +135,11 @@ class QLearningDQN():
             action = np.argmax(q_values)
         return action
 
-    def test(self, total_episodes, print_info=True):
-        results = Results(type_result='test')
-        for episode in range(total_episodes):
+    def test(self, total_episodes):
+        results_test = []
+        # for episode in range(total_episodes):
+        pbar = tqdm(range(total_episodes), desc='DQN-learning test')
+        for episode in pbar:
             state, info = self.env.reset()
             total_reward = 0
             while True:
@@ -149,21 +156,8 @@ class QLearningDQN():
                     break
                 # Move to the next state
                 state = next_state
-            results.append_data(episode, total_reward, 0.0)
-            if print_info:
-                results.print_info(prelude='TEST', avg_window=1, flush_each=1)
-        return results
-
-    def inline_test(self, episode):
-        # inline test
-        if episode % self.training_tests[0] == 0:
-            test_train_results = self.test(total_episodes=self.training_tests[1], print_info=False)
-            mean_test_train_results = test_train_results.mean()
-            print(80 * '#')
-            print(f"INLINE TEST {episode:4d} | Avg reward ({self.training_tests[1]}): {mean_test_train_results[1]:6.1f} | Epsilon: 0.")
-            print(80 * '#')
-            return mean_test_train_results
-        return None
+            results_test.append(total_reward)
+        return results_test
 
     def read_model(self, filename):
         with open(filename, "rb") as f:

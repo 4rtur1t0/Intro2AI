@@ -73,12 +73,12 @@ class QLearningD():
             if episode % self.training_tests[0] == 0:
                 rewards_test = self.test(total_episodes=self.training_tests[1])
                 rewards_inline_test.append(np.mean(rewards_test))
-            # Reduce epsilon (less exploration, more exploitation as time goes on)
-            epsilon_greedy.step()
             # Afegeix informació a la barra
             pbar.set_postfix(mean_train_reward=np.mean(rewards_train[-avg_window:]),
                              epsilon=epsilon_greedy.epsilon,
                              mean_test_reward = np.mean(rewards_test))
+            # Reduce epsilon (less exploration, more exploitation as time goes on)
+            epsilon_greedy.step()
         return rewards_train, rewards_inline_test, epsilons
 
 
@@ -116,17 +116,6 @@ class QLearningD():
                 state_d = next_state_d
             results_test.append(total_reward)
         return results_test
-
-    # def inline_test(self, episode):
-    #     # inline test
-    #     if episode % self.training_tests[0] == 0:
-    #         test_train_results = self.test(total_episodes=self.training_tests[1], print_info=False)
-    #         mean_test_train_results = test_train_results.mean()
-    #         print(50 * '#')
-    #         print(f"INLINE TEST {episode:4d} | Avg reward ({self.training_tests[1]}): {mean_test_train_results[1]:6.1f} | Epsilon: 0.")
-    #         print(50 * '#')
-    #         return mean_test_train_results
-    #     return None
 
     def create_random_q_table(self):
         """
